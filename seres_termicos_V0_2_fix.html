@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seres Térmicos — V0.2</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#020307;color:#ddd;font-family:system-ui,Segoe UI,sans-serif}
+canvas{display:block;width:100%;height:100%}
+#ui{position:fixed;left:18px;bottom:18px;width:320px;padding:15px 17px;background:rgba(5,7,12,.86);border:1px solid rgba(255,255,255,.13);border-radius:12px;backdrop-filter:blur(10px);font-size:11px}
+h1{font-size:17px;font-weight:600;margin:0}.sub{color:#9297a4;margin:3px 0 13px}
+.r{display:grid;grid-template-columns:92px 1fr 42px;align-items:center;gap:7px;margin:8px 0;color:#b9bdc7}
+input{width:100%}output{text-align:right;color:#eee;font-variant-numeric:tabular-nums}
+button{margin-top:7px;background:#111620;color:#ddd;border:1px solid #353b48;border-radius:6px;padding:6px 10px;cursor:pointer}
+#stats{position:fixed;right:18px;top:16px;text-align:right;color:#777;font:11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace}
+#note{position:fixed;right:18px;bottom:18px;color:#666;font-size:10px}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="ui">
+<h1>SERES TÉRMICOS · V0.2</h1>
+<div class="sub">Difusión + advección · sin fuente permanente</div>
+<div class="r"><span>Difusión α</span><input id="alpha" type="range" min="0" max="100" value="30"><output id="ao"></output></div>
+<div class="r"><span>Disipación λ</span><input id="loss" type="range" min="0" max="100" value="8"><output id="lo"></output></div>
+<div class="r"><span>Flujo</span><input id="flow" type="range" min="0" max="100" value="55"><output id="fo"></output></div>
+<div class="r"><span>Umbral</span><input id="iso" type="range" min="1" max="95" value="20"><output id="io"></output></div>
+<button id="pause">pausar</button>
+<button id="reset">reiniciar</button>
+</div>
+<div id="stats">campo: 32³<br>tiempo: <span id="time">0,0</span><br>FPS: <span id="fps">—</span><br>modo: campo volumétrico</div>
+<div id="note">temperatura relativa · el flujo deforma el campo</div>
+
+<script>
+'use strict';
+
+const N=32, SIZE=N*N*N, canvas=document.getElementById('gl');
+const gl=canvas.getContext('webgl2',{antialias:false,alpha:false});
+if(!gl){document.body.innerHTML='<div style="padding:30px;color:white">Tu navegador no soporta WebGL2.</div>';throw new Error('WebGL2 required');}
+
+const $=id=>document.getElementById(id);
+let field=new Float32Array(SIZE), next=new Float32Array(SIZE);
+let running=true, simTime=0, last=performance.now(), fpsFrames=0, fpsClock=last;
+const id=(x,y,z)=>x+N*(y+N*z);
+
+function reset(){
+  field.fill(0); next.fill(0); simTime=0;
+  // Una estructura inicial: no se alimenta después del nacimiento.
+  const cx=N*.43, cy=N*.50, cz=N*.50;
+  for(let z=0;z<N;z++)for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    const dx=x-cx,dy=y-cy,dz=z-cz;
+    const r2=dx*dx+dy*dy+dz*dz;
+    field[id(x,y,z)]=Math.exp(-r2/(2*3.0*3.0));
+  }
+}
+reset();
+
+function labels(){
+  $('ao').textContent=(+$('alpha').value/100).toFixed(2).replace('.',',');
+  $('lo').textContent=(+$('loss').value/1000).toFixed(3).replace('.',',');
+  $('fo').textContent=(+$('flow').value/100).toFixed(2).replace('.',',');
+  $('io').textContent=(+$('iso').value/100).toFixed(2).replace('.',',');
+}
+['alpha','loss','flow','iso'].forEach(k=>$(k).addEventListener('input',labels)); labels();
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function sample(x,y,z){
+  x=clamp(x,0,N-1.001); y=clamp(y,0,N-1.001); z=clamp(z,0,N-1.001);
+  const x0=Math.floor(x),y0=Math.floor(y),z0=Math.floor(z);
+  const x1=Math.min(x0+1,N-1),y1=Math.min(y0+1,N-1),z1=Math.min(z0+1,N-1);
+  const fx=x-x0,fy=y-y0,fz=z-z0;
+  const c000=field[id(x0,y0,z0)],c100=field[id(x1,y0,z0)];
+  const c010=field[id(x0,y1,z0)],c110=field[id(x1,y1,z0)];
+  const c001=field[id(x0,y0,z1)],c101=field[id(x1,y0,z1)];
+  const c011=field[id(x0,y1,z1)],c111=field[id(x1,y1,z1)];
+  const a=c000*(1-fx)+c100*fx, b=c010*(1-fx)+c110*fx;
+  const c=c001*(1-fx)+c101*fx, d=c011*(1-fx)+c111*fx;
+  return (a*(1-fy)+b*fy)*(1-fz)+(c*(1-fy)+d*fy)*fz;
+}
+
+function velocity(x,y,z){
+  // Campo de flujo deliberadamente sencillo: un vórtice 3D suave.
+  // No pretende ser todavía Navier–Stokes; es el medio dinámico de V0.2.
+  const cx=(N-1)/2, cy=(N-1)/2, cz=(N-1)/2;
+  const X=(x-cx)/(N/2), Y=(y-cy)/(N/2), Z=(z-cz)/(N/2);
+  const f=+$('flow').value/100;
+  const r2=X*X+Y*Y;
+  const swirl=1.35*f*Math.exp(-r2*1.8)*(0.82+0.18*Math.cos(Z*3.0));
+  const radial=0.24*f*Math.sin(simTime*.7+Z*2.2)*Math.exp(-r2*1.2);
+  const vertical=0.55*f*Math.exp(-r2*1.4)*(1-0.7*Math.abs(Z));
+  return {
+    x:-Y*swirl + X*radial,
+    y: X*swirl + Y*radial,
+    z: vertical*Math.cos(Z*1.7)
+  };
+}
+
+function step(dt){
+  const alpha=+$('alpha').value/100*0.11;
+  const loss=+$('loss').value/1000;
+  const scale=N*.055;
+  // Semi-Lagrangiano: transportamos la temperatura hacia atrás en el flujo.
+  for(let z=1;z<N-1;z++)for(let y=1;y<N-1;y++)for(let x=1;x<N-1;x++){
+    const v=velocity(x,y,z);
+    const bx=x-v.x*scale*dt, by=y-v.y*scale*dt, bz=z-v.z*scale*dt;
+    const adv=sample(bx,by,bz);
+    const i=id(x,y,z), T=adv;
+    const lap=field[i-1]+field[i+1]+field[i-N]+field[i+N]+field[i-N*N]+field[i+N*N]-6*field[i];
+    next[i]=Math.max(0,T+alpha*lap-loss*T*dt);
+  }
+  // Frontera abierta: lo que llega al borde se pierde.
+  for(let z=0;z<N;z++)for(let y=0;y<N;y++){next[id(0,y,z)]=0;next[id(N-1,y,z)]=0}
+  for(let z=0;z<N;z++)for(let x=0;x<N;x++){next[id(x,0,z)]=0;next[id(x,N-1,z)]=0}
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){next[id(x,y,0)]=0;next[id(x,y,N-1)]=0}
+  [field,next]=[next,field];
+  simTime+=dt;
+}
+
+/* ---------- WebGL2 volume renderer ---------- */
+const vs=`#version 300 es
+in vec2 p;out vec2 uv;
+void main(){uv=p*.5+.5;gl_Position=vec4(p,0.,1.);}
+`;
+const fs=`#version 300 es
+precision highp float;
+precision highp sampler3D;
+uniform sampler3D vol;
+uniform float iso;
+uniform float aspect;
+in vec2 uv;out vec4 outColor;
+
+vec4 sampleV(vec3 p){
+  return texture(vol,p);
+}
+void main(){
+  vec2 q=uv*2.0-1.0;
+  q.x*=aspect;
+  vec3 ro=vec3(q.x*1.05,q.y*1.05,2.25);
+  vec3 rd=normalize(vec3(q.x*0.72,q.y*0.72,-1.55));
+  vec3 boxMin=vec3(-.82),boxMax=vec3(.82);
+  vec3 inv=1.0/rd;
+  vec3 t0=(boxMin-ro)*inv, t1=(boxMax-ro)*inv;
+  vec3 tn=min(t0,t1),tf=max(t0,t1);
+  float tEnter=max(max(tn.x,tn.y),tn.z);
+  float tExit=min(min(tf.x,tf.y),tf.z);
+  if(tExit<=max(tEnter,0.0)){outColor=vec4(0.002,0.003,0.008,1);return;}
+  float t=max(tEnter,0.0), dt=(tExit-t)/110.0;
+  vec3 pos=ro+rd*t;
+  vec3 accum=vec3(0.0);
+  float alpha=0.0;
+  for(int i=0;i<110;i++){
+    if(t>tExit)break;
+    vec3 tc=(pos-boxMin)/(boxMax-boxMin);
+    float T=sampleV(tc).r;
+    float d=max(0.0,T-iso);
+    float a=1.0-exp(-d*5.0);
+    float h=0.72-0.70*clamp(T,0.0,1.0);
+    vec3 col=vec3(0.0);
+    // HSV-ish hand-built thermal palette: violet -> red -> orange -> white.
+    if(T<.35) col=mix(vec3(.10,.02,.25),vec3(.55,.02,.18),T/.35);
+    else if(T<.70) col=mix(vec3(.55,.02,.18),vec3(1.0,.20,.02),(T-.35)/.35);
+    else col=mix(vec3(1.0,.20,.02),vec3(1.0,.92,.72),(T-.70)/.30);
+    accum+=col*a*(1.0-alpha);
+    alpha+=a*(1.0-alpha)*.72;
+    if(alpha>.97)break;
+    pos+=rd*dt;t+=dt;
+  }
+  outColor=vec4(accum,1.0);
+}
+`;
+function shader(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s}
+const prog=gl.createProgram();gl.attachShader(prog,shader(gl.VERTEX_SHADER,vs));gl.attachShader(prog,shader(gl.FRAGMENT_SHADER,fs));gl.linkProgram(prog);
+if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(prog));
+const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+const loc=gl.getAttribLocation(prog,'p'),tex=gl.createTexture();
+gl.bindTexture(gl.TEXTURE_3D,tex);
+gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_WRAP_R,gl.CLAMP_TO_EDGE);
+gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);
+function resize(){const d=Math.min(devicePixelRatio||1,2);canvas.width=innerWidth*d;canvas.height=innerHeight*d;gl.viewport(0,0,canvas.width,canvas.height)}
+addEventListener('resize',resize);resize();
+
+function render(){
+  gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_3D,tex);
+  gl.texImage3D(gl.TEXTURE_3D,0,gl.R32F,N,N,N,0,gl.RED,gl.FLOAT,field);
+  gl.useProgram(prog);gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  gl.uniform1i(gl.getUniformLocation(prog,'vol'),0);
+  gl.uniform1f(gl.getUniformLocation(prog,'iso'),+$('iso').value/100);
+  gl.uniform1f(gl.getUniformLocation(prog,'aspect'),canvas.width/canvas.height);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+}
+
+function loop(now){
+  const real=Math.min((now-last)/1000,.05);last=now;
+  if(running){let acc=real;while(acc>=.016){step(.016);acc-=.016}}
+  render();
+  fpsFrames++;
+  if(now-fpsClock>1000){$('fps').textContent=Math.round(fpsFrames*1000/(now-fpsClock));fpsFrames=0;fpsClock=now}
+  $('time').textContent=simTime.toFixed(1).replace('.',',');
+  requestAnimationFrame(loop);
+}
+$('pause').onclick=()=>{running=!running;$('pause').textContent=running?'pausar':'continuar'};
+$('reset').onclick=reset;
+requestAnimationFrame(loop);
+</script>
+</body></html>

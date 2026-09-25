@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seres Térmicos</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Georgia', serif;
+    color: #888;
+    gap: 1.2em;
+    padding: 1.5em;
+  }
+  .title {
+    font-size: 1.1em;
+    letter-spacing: 0.35em;
+    color: #c8784a;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  canvas {
+    display: block;
+    /* render pixelado escalado vía CSS para canvas más grande sin trabajo extra */
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    max-width: 100%;
+    border: 1px solid #1a1a1a;
+  }
+  .quote {
+    font-size: 0.72em;
+    max-width: 580px;
+    text-align: center;
+    color: #3a4a5a;
+    font-style: italic;
+    line-height: 1.7;
+  }
+  .legend {
+    display: flex;
+    gap: 2em;
+    font-size: 0.62em;
+    letter-spacing: 0.1em;
+    color: #444;
+  }
+  .legend span { display: flex; align-items: center; gap: 0.4em; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot.hot  { background: radial-gradient(circle, #fff 0%, #ff8c00 60%, #600 100%); }
+  .dot.cold { background: radial-gradient(circle, #cff 0%, #0af 60%, #006 100%); }
+</style>
+</head>
+<body>
+
+<div class="title">Seres Térmicos</div>
+
+<canvas id="c"></canvas>
+
+<div class="legend">
+  <span><div class="dot hot"></div> ser cálido</span>
+  <span><div class="dot cold"></div> ser frío</span>
+</div>
+
+<div class="quote">
+  "cada hombre, cada ser, era un organismo hecho de temperaturas cambiantes.
+  La humanidad de la época saturnina fue un ciego y sordo e impalpable
+  conjunto de calores y fríos articulados."
+  <br><br>— Jorge Luis Borges, <em>Seres Térmicos</em>
+</div>
+
+<script>
+// ─── Parámetros de la simulación ───────────────────────────────────────────
+const GW   = 220;   // celdas horizontales
+const GH   = 160;   // celdas verticales
+const SCALE = 4;    // píxeles CSS por celda (canvas físico = GW*SCALE × GH*SCALE)
+const ALPHA = 0.22; // difusividad térmica (ecuación del calor: dT/dt = α∇²T)
+const DAMP  = 0.994;// enfriamiento pasivo hacia el vacío cósmico (T → 0)
+const STEPS = 3;    // pasos físicos por frame de render
+const T_MAX = 100;  // escala para colormap
+
+// ─── Canvas ────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+canvas.width  = GW * SCALE;
+canvas.height = GH * SCALE;
+const ctx = canvas.getContext('2d');
+const img = ctx.createImageData(GW * SCALE, GH * SCALE);
+const px  = img.data;
+
+// ─── Grillas de temperatura (ping-pong) ────────────────────────────────────
+let T    = new Float32Array(GW * GH);
+let Tnxt = new Float32Array(GW * GH);
+
+// ─── Seres térmicos ────────────────────────────────────────────────────────
+// amp > 0 → caliente (naranja/blanco), amp < 0 → frío (azul/cyan)
+// sigma: radio del cuerpo en celdas
+// freq/phase: pulsación interna del ser
+const beings = [
+  { x: 55,  y: 50,  vx:  0.38, vy:  0.16, amp:  92, sigma: 9,  freq: 0.019, phase: 0.0  },
+  { x: 165, y: 110, vx: -0.28, vy:  0.22, amp: -80, sigma: 8,  freq: 0.023, phase: 3.14 },
+  { x: 110, y: 28,  vx:  0.14, vy:  0.34, amp:  74, sigma: 10, freq: 0.014, phase: 1.2  },
+  { x: 35,  y: 130, vx:  0.22, vy: -0.19, amp: -60, sigma: 7,  freq: 0.020, phase: 2.4  },
+  { x: 185, y: 55,  vx: -0.18, vy:  0.26, amp:  65, sigma: 8,  freq: 0.017, phase: 0.8  },
+];
+
+// ─── Física: agregar fuente gaussiana ──────────────────────────────────────
+function addSource(x, y, amplitude, sigma) {
+  const x0 = Math.round(x), y0 = Math.round(y);
+  const r = Math.ceil(sigma * 2.8);
+  const inv2s2 = 1 / (2 * sigma * sigma);
+  for (let j = Math.max(1, y0 - r); j < Math.min(GH - 1, y0 + r + 1); j++) {
+    for (let i = Math.max(1, x0 - r); i < Math.min(GW - 1, x0 + r + 1); i++) {
+      const d2 = (i - x) * (i - x) + (j - y) * (j - y);
+      T[j * GW + i] += amplitude * Math.exp(-d2 * inv2s2);
+    }
+  }
+}
+
+// ─── Física: un paso de la ecuación del calor (diferencias finitas) ─────────
+let tick = 0;
+function physicsStep() {
+  // dT/dt = α * laplaciano(T)  →  esquema explícito de Euler
+  for (let j = 1; j < GH - 1; j++) {
+    for (let i = 1; i < GW - 1; i++) {
+      const k   = j * GW + i;
+      const lap = T[(j-1)*GW+i] + T[(j+1)*GW+i] + T[j*GW+i-1] + T[j*GW+i+1] - 4*T[k];
+      Tnxt[k] = (T[k] + ALPHA * lap) * DAMP;
+    }
+  }
+  // Borde Neumann (flujo nulo = el calor no escapa bruscamente)
+  for (let i = 0; i < GW; i++) {
+    Tnxt[i]             = Tnxt[GW + i];
+    Tnxt[(GH-1)*GW + i] = Tnxt[(GH-2)*GW + i];
+  }
+  for (let j = 0; j < GH; j++) {
+    Tnxt[j*GW]        = Tnxt[j*GW + 1];
+    Tnxt[j*GW+GW-1]   = Tnxt[j*GW+GW-2];
+  }
+  // Intercambiar buffers
+  const tmp = T; T = Tnxt; Tnxt = tmp;
+
+  // Mover seres y emitir calor/frío
+  tick++;
+  for (const b of beings) {
+    b.x += b.vx;
+    b.y += b.vy;
+    if (b.x < b.sigma || b.x > GW - b.sigma) {
+      b.vx *= -1;
+      b.x = Math.max(b.sigma, Math.min(GW - b.sigma, b.x));
+      // pequeña variación de rumbo al rebotar
+      b.vy += (Math.random() - 0.5) * 0.06;
+    }
+    if (b.y < b.sigma || b.y > GH - b.sigma) {
+      b.vy *= -1;
+      b.y = Math.max(b.sigma, Math.min(GH - b.sigma, b.y));
+      b.vx += (Math.random() - 0.5) * 0.06;
+    }
+    // Pulsación interna
+    const pulse = 0.65 + 0.35 * Math.sin(tick * b.freq + b.phase);
+    addSource(b.x, b.y, b.amp * pulse * 0.12, b.sigma);
+  }
+}
+
+// ─── Colormap ──────────────────────────────────────────────────────────────
+// t_norm ∈ [-1, 1]:  negativo→azul/cyan, cero→negro, positivo→naranja/blanco
+function tempToRGB(v) {
+  // v ya clampeado en [-1, 1]
+  let r, g, b;
+  if (v >= 0) {
+    // negro → rojo profundo → naranja → amarillo → blanco
+    if (v < 0.25) {
+      const u = v / 0.25;
+      r = u * 180; g = 0; b = 0;
+    } else if (v < 0.55) {
+      const u = (v - 0.25) / 0.30;
+      r = 180 + u * 75; g = u * 120; b = 0;
+    } else if (v < 0.80) {
+      const u = (v - 0.55) / 0.25;
+      r = 255; g = 120 + u * 115; b = u * 60;
+    } else {
+      const u = (v - 0.80) / 0.20;
+      r = 255; g = 235 + u * 20; b = 60 + u * 195;
+    }
+  } else {
+    // negro → azul profundo → azul medio → cyan
+    const w = -v;
+    if (w < 0.25) {
+      const u = w / 0.25;
+      r = 0; g = 0; b = u * 180;
+    } else if (w < 0.55) {
+      const u = (w - 0.25) / 0.30;
+      r = 0; g = u * 140; b = 180 + u * 60;
+    } else if (w < 0.80) {
+      const u = (w - 0.55) / 0.25;
+      r = u * 30; g = 140 + u * 100; b = 240 + u * 15;
+    } else {
+      const u = (w - 0.80) / 0.20;
+      r = 30 + u * 160; g = 240 + u * 15; b = 255;
+    }
+  }
+  return [r | 0, g | 0, b | 0];
+}
+
+// ─── Render ────────────────────────────────────────────────────────────────
+function render() {
+  const W = GW * SCALE, H = GH * SCALE;
+  for (let j = 0; j < GH; j++) {
+    for (let i = 0; i < GW; i++) {
+      const temp  = T[j * GW + i];
+      const norm  = temp > T_MAX ? 1 : temp < -T_MAX ? -1 : temp / T_MAX;
+      const [r, g, b] = tempToRGB(norm);
+      // pintar bloque SCALE × SCALE
+      for (let pj = 0; pj < SCALE; pj++) {
+        for (let pi = 0; pi < SCALE; pi++) {
+          const k = ((j * SCALE + pj) * W + (i * SCALE + pi)) * 4;
+          px[k]   = r;
+          px[k+1] = g;
+          px[k+2] = b;
+          px[k+3] = 255;
+        }
+      }
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+// ─── Loop principal ────────────────────────────────────────────────────────
+function loop() {
+  for (let s = 0; s < STEPS; s++) physicsStep();
+  render();
+  requestAnimationFrame(loop);
+}
+
+// Calor inicial: sembrar los seres en sus posiciones de inicio
+for (const b of beings) addSource(b.x, b.y, b.amp * 0.8, b.sigma * 1.5);
+
+loop();
+</script>
+</body>
+</html>

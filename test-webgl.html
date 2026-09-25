@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<body style="margin:0;background:#111">
+<canvas id="c" style="width:100vw;height:100vh"></canvas>
+
+<script>
+const canvas = document.getElementById("c");
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+const gl = canvas.getContext("webgl2");
+
+if (!gl) {
+    document.body.innerHTML =
+        "<h1 style='color:white'>WebGL2 NO disponible</h1>";
+} else {
+    gl.clearColor(1, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    console.log("WebGL2 OK", gl);
+}
+</script>
+</body>
+</html>

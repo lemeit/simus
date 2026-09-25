@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seres Térmicos — v0.7 3D</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f0d0a;--surface:#1A1612;--surface2:#221E18;--border:#3D3028;
+  --text:#F2ECE4;--dim:#C9BEB2;--accent:#D9691F;--good:#8FB56B;
+  --bad:#D9736F;--teal:#009688;--amber:#D9A441;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#000;
+  color:var(--text);font-family:'JetBrains Mono',monospace}
+#c{display:block;width:100vw;height:100vh}
+.ctrl{position:fixed;left:14px;bottom:14px;width:238px;padding:11px 12px;
+  background:rgba(26,22,18,.96);border:1px solid var(--border);
+  border-radius:10px;backdrop-filter:blur(12px);overflow:hidden}
+.ctrl h1{font-size:12px;margin:0 0 1px;letter-spacing:.06em;color:var(--accent);font-weight:700}
+.sub{color:#5a4a3a;margin-bottom:6px;font-size:9px;line-height:1.4}
+.row{display:flex;align-items:center;gap:5px;margin:2px 0}
+.row span{width:80px;color:#7a6555;font-size:10px;flex-shrink:0}
+.row output{width:44px;text-align:right;color:var(--dim);font-size:9px;
+  font-family:'JetBrains Mono',monospace;flex-shrink:0;overflow:hidden}
+input[type=range]{flex:1;min-width:0;accent-color:var(--accent);height:3px;cursor:pointer;
+  -webkit-appearance:none;appearance:none;background:var(--border);border-radius:2px}
+input[type=range]::-webkit-slider-thumb{width:10px;height:10px;-webkit-appearance:none;
+  background:var(--accent);border-radius:50%;margin-top:-3.5px}
+input[type=range]::-moz-range-thumb{width:10px;height:10px;background:var(--accent);
+  border:none;border-radius:50%}
+.btn{margin-top:5px;background:var(--surface2);color:var(--dim);border:1px solid var(--border);
+  border-radius:5px;padding:4px 8px;cursor:pointer;font-size:10px;width:100%;
+  font-family:'JetBrains Mono',monospace}
+.btn:hover{background:var(--border);color:var(--text)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:4px;
+  margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
+.stat{text-align:center;background:var(--surface2);border:1px solid var(--border);
+  border-radius:5px;padding:4px 2px;overflow:hidden;min-width:0}
+.stat .v{font-size:12px;line-height:1.2;font-family:'JetBrains Mono',monospace;
+  color:var(--dim);white-space:nowrap;overflow:hidden;display:block}
+.stat .l{font-size:8px;color:#5a4a3a;margin-top:2px;display:block}
+.stat.s-hot .v{color:var(--accent)} .stat.s-cld .v{color:var(--teal)}
+.stat.s-life .v{color:var(--amber)}
+.charts{position:fixed;right:14px;top:14px;width:min(252px,calc(100vw - 270px));
+  display:flex;flex-direction:column;gap:6px}
+.chart-box{background:rgba(26,22,18,.94);border:1px solid var(--border);
+  border-radius:9px;padding:8px 10px;backdrop-filter:blur(12px)}
+.chart-box .title{font-size:9px;color:#5a4a3a;margin-bottom:4px;
+  display:flex;justify-content:space-between;align-items:baseline}
+.chart-box .title b{color:var(--dim);font-weight:500}
+canvas.graph{display:block;width:100%;border-radius:4px;background:var(--surface)}
+#fps{position:fixed;left:14px;top:10px;color:#2a1e14;font-size:9px}
+#hint{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;
+  color:#1a1008;font-size:9px;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="ctrl">
+  <h1>SERES TÉRMICOS · v0.7 · 3D</h1>
+  <div class="sub">"calores y fríos articulados" — Borges</div>
+  <div class="row"><span>Difusión α</span>
+    <input id="al" type="range" min="0.05" max="0.40" step="0.01" value="0.18">
+    <output id="alo">0.18</output></div>
+  <div class="row"><span>Vacío λ</span>
+    <input id="lm" type="range" min="0.001" max="0.020" step="0.001" value="0.005">
+    <output id="lmo">0.005</output></div>
+  <div class="row"><span>Metabolismo μ</span>
+    <input id="me" type="range" min="0.1" max="5.0" step="0.1" value="0.8">
+    <output id="meo">0.8</output></div>
+  <div class="row"><span>Nac./frame</span>
+    <input id="pb" type="range" min="0" max="10" step="1" value="2">
+    <output id="pbo">2</output></div>
+  <div class="row"><span>Energía E₀</span>
+    <input id="e0" type="range" min="50" max="500" step="10" value="200">
+    <output id="e0o">200</output></div>
+  <div class="row"><span>Reproducción</span>
+    <input id="re" type="range" min="1.2" max="4.0" step="0.1" value="2.0">
+    <output id="reo">2.0×E₀</output></div>
+  <div class="row"><span>Pasos/frame</span>
+    <input id="spf" type="range" min="1" max="4" step="1" value="1">
+    <output id="spfo">1</output></div>
+  <button class="btn" id="reset">reiniciar</button>
+  <div class="stats">
+    <div class="stat"><div class="v" id="cnt">0</div><div class="l">total</div></div>
+    <div class="stat s-hot"><div class="v" id="hot">0</div><div class="l">cal.</div></div>
+    <div class="stat s-cld"><div class="v" id="cold">0</div><div class="l">fríos</div></div>
+    <div class="stat s-life"><div class="v" id="vida">—</div><div class="l">vida media</div></div>
+  </div>
+</div>
+
+<div class="charts">
+  <div class="chart-box">
+    <div class="title"><b>Población N(t)</b><span id="lbl-n">— seres</span></div>
+    <canvas class="graph" id="g-pop" height="90"></canvas></div>
+  <div class="chart-box">
+    <div class="title"><b>Tasas</b>
+      <span><span style="color:#8FB56B">nac.</span> · <span style="color:#D9736F">muerte</span></span>
+    </div>
+    <canvas class="graph" id="g-rate" height="90"></canvas></div>
+  <div class="chart-box">
+    <div class="title"><b>Dist. energía</b><span id="lbl-e">E₀=200</span></div>
+    <canvas class="graph" id="g-energy" height="90"></canvas></div>
+</div>
+
+<div id="fps"></div>
+<div id="hint">arrastrar → rotar · clic → nuevo ser · [Tab] seguir otro ser</div>
+
+<!-- Overlay PIP: borde + etiqueta (el contenido lo dibuja WebGL) -->
+<div id="pip-frame">
+  <div id="pip-label">👁 vista interior · <span id="pip-who">ser #0</span></div>
+</div>
+
+<style>
+#pip-frame{position:fixed;right:14px;bottom:14px;
+  width:280px;height:180px;
+  border:1px solid var(--border);border-radius:8px;
+  pointer-events:none;overflow:hidden;
+  box-shadow:0 0 20px rgba(0,0,0,.7)}
+#pip-label{position:absolute;top:0;left:0;right:0;
+  padding:4px 8px;font-size:9px;color:#5a4a3a;
+  background:linear-gradient(rgba(15,13,10,.85),transparent);
+  font-family:'JetBrains Mono',monospace;letter-spacing:.05em}
+</style>
+
+<script>
+'use strict';
+
+// ── WebGL2 ────────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+canvas.width  = window.innerWidth;
+canvas.height = window.innerHeight;
+window.addEventListener('resize', ()=>{
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  gl.viewport(0,0,canvas.width,canvas.height);
+});
+
+const gl = canvas.getContext('webgl2', {antialias:false});
+if (!gl) { alert('WebGL2 no disponible'); }
+
+// ── Shaders ────────────────────────────────────────────────────────────────────
+const VS = `#version 300 es
+in vec2 a_pos;
+out vec2 v_uv;
+void main(){ v_uv=a_pos*.5+.5; gl_Position=vec4(a_pos,0,1); }`;
+
+const FS = `#version 300 es
+precision highp float;
+precision highp sampler3D;
+uniform sampler3D u_vol;
+uniform mat3  u_rot;
+uniform vec2  u_res;
+uniform bool  u_pip;       // true → vista interior
+uniform vec3  u_pipPos;    // posición del ser (espacio normalizado [0,1]³)
+uniform mat3  u_pipRot;    // orientación de la cámara interior
+in vec2 v_uv;
+out vec4 fragColor;
+
+// Rayo vs esfera centrada en (0.5,0.5,0.5) radio R
+const float R = 0.44;
+const vec3 CENTER = vec3(0.5);
+vec2 sphereHit(vec3 ro, vec3 rd){
+  vec3 oc = ro - CENTER;
+  float b = dot(oc, rd);
+  float c = dot(oc, oc) - R*R;
+  float disc = b*b - c;
+  if(disc < 0.0) return vec2(1.0, -1.0);
+  float sq = sqrt(disc);
+  return vec2(-b - sq, -b + sq);
+}
+
+// Transfer function: magnitud normalizada → color según tipo
+vec3 emission(float mag, bool isHot){
+  float h = clamp(mag, 0.0, 1.0);
+  if(isHot){
+    // negro → marrón → naranja → amarillo → blanco
+    if(h<.20) return mix(vec3(.05,.01,.0),  vec3(.35,.08,.0),  h/.20);
+    if(h<.50) return mix(vec3(.35,.08,.0),  vec3(.85,.35,.0),  (h-.20)/.30);
+    if(h<.80) return mix(vec3(.85,.35,.0),  vec3(1.0,.75,.2),  (h-.50)/.30);
+    return     mix(vec3(1.0,.75,.2),  vec3(1.0,.97,.85), (h-.80)/.20);
+  } else {
+    // negro → azul oscuro → cian → blanco
+    if(h<.20) return mix(vec3(.0,.02,.08),  vec3(.0,.08,.35),  h/.20);
+    if(h<.50) return mix(vec3(.0,.08,.35),  vec3(.0,.38,.55),  (h-.20)/.30);
+    if(h<.80) return mix(vec3(.0,.38,.55),  vec3(.2,.75,.80),  (h-.50)/.30);
+    return     mix(vec3(.2,.75,.80),  vec3(.85,.97,1.0), (h-.80)/.20);
+  }
+}
+
+void main(){
+  float aspect = u_res.x / u_res.y;
+  vec2 ndc = (v_uv * 2.0 - 1.0) * vec2(aspect, 1.0);
+
+  vec3 camWorld, dirWorld;
+
+  if(u_pip){
+    // ── Vista interior: cámara en la posición del ser ──────────────────────
+    camWorld = u_pipPos;
+    // FOV más amplio (0.75) para sensación inmersiva
+    dirWorld = normalize(u_pipRot * vec3(ndc * 0.75, 1.0));
+  } else {
+    // ── Vista exterior: órbita alrededor del centro ────────────────────────
+    camWorld = u_rot * vec3(0.0, 0.0, -2.0) + CENTER;
+    dirWorld = normalize(u_rot * vec3(ndc * 0.38, 1.0));
+  }
+
+  vec2 hit = sphereHit(camWorld, dirWorld);
+  if(hit.x > hit.y || hit.y < 0.0){
+    fragColor = vec4(0.0, 0.0, 0.0, 1.0); return;
+  }
+
+  float tA = max(hit.x, 0.001);
+  float tB = hit.y;
+  const int STEPS = 180;
+  float dt = (tB - tA) / float(STEPS);
+
+  vec3 color = vec3(0.0);
+  float alpha = 0.0;
+
+  for(int i=0; i<STEPS; i++){
+    float tt = tA + float(i)*dt;
+    vec3 p = camWorld + dirWorld * tt;
+    float distC = length(p - CENTER);
+
+    // Fade en el borde: suave para exterior, con glow para interior
+    float edgeFade;
+    if(u_pip){
+      // Desde adentro: la "pared" de la esfera brilla tenuemente
+      edgeFade = 1.0 + smoothstep(R*0.85, R, distC) * 0.5;
+    } else {
+      edgeFade = smoothstep(R, R*0.72, distC);
+    }
+
+    vec4 vox = texture(u_vol, p);
+    float hot  = vox.r;
+    float cold = vox.b;
+    float mag  = max(hot, cold);
+    float thresh = u_pip ? 0.004 : 0.015;  // muy sensible desde adentro
+    if(mag > thresh){
+      bool isHot = hot >= cold;
+      // Vista interior: boost fuerte para que se vea aunque sea tenue
+      float magBoost = u_pip ? clamp(mag * 2.5, 0., 1.) : mag;
+      vec3  emit = emission(magBoost, isHot) * edgeFade;
+      float sigma = mag * (u_pip ? 24.0 : 16.0) * dt;
+      float a2 = 1.0 - exp(-sigma);
+      color += (1.0 - alpha) * a2 * emit;
+      alpha += (1.0 - alpha) * a2;
+      if(alpha > 0.99) break;
+    }
+  }
+
+  if(!u_pip){
+    // Rim glow exterior de la esfera
+    float rim = 1.0 - clamp(dot(-dirWorld,
+      normalize(camWorld + dirWorld*(tA+tB)*0.5 - CENTER)), 0.0, 1.0);
+    color += vec3(.04,.02,.01) * pow(rim, 3.0) * (1.0 - alpha);
+  } else {
+    // Desde adentro: ambiente muy tenue para que nunca sea negro puro
+    float darkness = 1.0 - alpha;
+    // Neblina azul oscura en el vacío, toca levemente naranja en el borde
+    color += vec3(0.0, 0.008, 0.018) * darkness;
+    // Borde de la esfera visto desde adentro: tenue calor anaranjado
+    vec3 wallP = camWorld + dirWorld * tB;
+    float wallDist = length(wallP - CENTER) / R;
+    color += vec3(0.04, 0.015, 0.002) * smoothstep(0.9, 1.0, wallDist) * darkness;
+  }
+
+  fragColor = vec4(color, 1.0);
+}`;
+
+function compileShader(type, src){
+  const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))
+    console.error(gl.getShaderInfoLog(s));
+  return s;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, VS));
+gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, FS));
+gl.linkProgram(prog);
+if(!gl.getProgramParameter(prog, gl.LINK_STATUS))
+  console.error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+
+// Fullscreen quad
+const vbuf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, vbuf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+const aloc = gl.getAttribLocation(prog,'a_pos');
+gl.enableVertexAttribArray(aloc);
+gl.vertexAttribPointer(aloc,2,gl.FLOAT,false,0,0);
+
+const uVol    = gl.getUniformLocation(prog,'u_vol');
+const uRot    = gl.getUniformLocation(prog,'u_rot');
+const uRes    = gl.getUniformLocation(prog,'u_res');
+const uPip    = gl.getUniformLocation(prog,'u_pip');
+const uPipPos = gl.getUniformLocation(prog,'u_pipPos');
+const uPipRot = gl.getUniformLocation(prog,'u_pipRot');
+
+// ── 3D Texture ────────────────────────────────────────────────────────────────
+const GW=64, GH=48, GD=32, N3=GW*GH*GD;
+const texData = new Uint8Array(N3*4);  // RGBA8
+
+const tex3d = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_3D, tex3d);
+gl.texImage3D(gl.TEXTURE_3D,0,gl.RGBA,GW,GH,GD,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_WRAP_R,gl.CLAMP_TO_EDGE);
+gl.uniform1i(uVol,0);
+
+function uploadVolume(){
+  const T_MAX=80;
+  for(let i=0;i<N3;i++){
+    const v=T3[i], p=i*4;
+    texData[p]   = v>0  ? Math.min(255,v/T_MAX*255)|0 : 0;
+    texData[p+1] = 0;
+    texData[p+2] = v<0  ? Math.min(255,-v/T_MAX*255)|0 : 0;
+    texData[p+3] = 255;
+  }
+  gl.bindTexture(gl.TEXTURE_3D,tex3d);
+  gl.texSubImage3D(gl.TEXTURE_3D,0,0,0,0,GW,GH,GD,gl.RGBA,gl.UNSIGNED_BYTE,texData);
+}
+
+// ── Rotación con ratón ────────────────────────────────────────────────────────
+let azimuth=0.4, elevation=0.3;
+let dragging=false, lastX=0, lastY=0;
+canvas.addEventListener('mousedown',e=>{
+  if(e.target!==canvas) return;
+  dragging=true; lastX=e.clientX; lastY=e.clientY;
+});
+window.addEventListener('mouseup',()=>dragging=false);
+window.addEventListener('mousemove',e=>{
+  if(!dragging) return;
+  azimuth  +=(e.clientX-lastX)*0.008;
+  elevation+=(e.clientY-lastY)*0.008;
+  elevation=Math.max(-1.3,Math.min(1.3,elevation));
+  lastX=e.clientX; lastY=e.clientY;
+});
+canvas.addEventListener('touchstart',e=>{
+  dragging=true;
+  lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;
+},{passive:true});
+window.addEventListener('touchend',()=>dragging=false);
+window.addEventListener('touchmove',e=>{
+  if(!dragging) return;
+  azimuth  +=(e.touches[0].clientX-lastX)*0.008;
+  elevation+=(e.touches[0].clientY-lastY)*0.008;
+  elevation=Math.max(-1.3,Math.min(1.3,elevation));
+  lastX=e.touches[0].clientX; lastY=e.touches[0].clientY;
+},{passive:true});
+
+function makeRot3(az,el){
+  const ca=Math.cos(az),sa=Math.sin(az);
+  const ce=Math.cos(el),se=Math.sin(el);
+  // R = Ry(az) · Rx(el) — col-major para gl.uniformMatrix3fv
+  return new Float32Array([
+    ca,    0,  -sa,
+    sa*se, ce,  ca*se,
+    sa*ce,-se,  ca*ce
+  ]);
+}
+
+// ── Campo 3D y seres ──────────────────────────────────────────────────────────
+let T3   = new Float32Array(N3);
+let T3n  = new Float32Array(N3);
+const idx3 = (i,j,k)=>i+GW*(j+GH*k);
+
+function diffuse3(alpha,lambda){
+  const k=alpha*0.10;
+  for(let k2=1;k2<GD-1;k2++)
+    for(let j=1;j<GH-1;j++)
+      for(let i=1;i<GW-1;i++){
+        const c=idx3(i,j,k2);
+        const lap = T3[idx3(i+1,j,k2)]+T3[idx3(i-1,j,k2)]
+                  + T3[idx3(i,j+1,k2)]+T3[idx3(i,j-1,k2)]
+                  + T3[idx3(i,j,k2+1)]+T3[idx3(i,j,k2-1)]
+                  - 6*T3[c];
+        T3n[c]=T3[c]+k*lap-lambda*T3[c];
+      }
+  // Neumann en los 6 rostros
+  for(let j=0;j<GH;j++) for(let k2=0;k2<GD;k2++){
+    T3n[idx3(0,j,k2)]   =T3n[idx3(1,j,k2)];
+    T3n[idx3(GW-1,j,k2)]=T3n[idx3(GW-2,j,k2)];
+  }
+  for(let i=0;i<GW;i++) for(let k2=0;k2<GD;k2++){
+    T3n[idx3(i,0,k2)]   =T3n[idx3(i,1,k2)];
+    T3n[idx3(i,GH-1,k2)]=T3n[idx3(i,GH-2,k2)];
+  }
+  for(let i=0;i<GW;i++) for(let j=0;j<GH;j++){
+    T3n[idx3(i,j,0)]   =T3n[idx3(i,j,1)];
+    T3n[idx3(i,j,GD-1)]=T3n[idx3(i,j,GD-2)];
+  }
+  const tmp=T3;T3=T3n;T3n=tmp;
+}
+
+function addGauss3(bx,by,bz,amp,sigma){
+  const r=Math.ceil(sigma*2.5)|0;
+  const cx=bx|0,cy=by|0,cz=bz|0;
+  const inv=1/(2*sigma*sigma);
+  for(let k2=Math.max(1,cz-r);k2<Math.min(GD-1,cz+r+1);k2++)
+    for(let j=Math.max(1,cy-r);j<Math.min(GH-1,cy+r+1);j++)
+      for(let i=Math.max(1,cx-r);i<Math.min(GW-1,cx+r+1);i++){
+        const d2=(i-bx)**2+(j-by)**2+(k2-bz)**2;
+        T3[idx3(i,j,k2)]+=amp*Math.exp(-d2*inv);
+      }
+}
+
+const A_SER=60, SER_MAX=50;
+
+class Ser{
+  constructor(x,y,z,type,E0){
+    this.x=x??(0.1+Math.random()*.8)*GW;
+    this.y=y??(0.1+Math.random()*.8)*GH;
+    this.z=z??(0.1+Math.random()*.8)*GD;
+    this.type=type??(Math.random()<.5?1:-1);
+    this.E=E0*(.5+Math.random()*.5);
+    this.E0=E0;
+    this.sigma=3.5+Math.random()*2.5;
+    this.vx=(Math.random()-.5)*.3;
+    this.vy=(Math.random()-.5)*.3;
+    this.vz=(Math.random()-.5)*.3;
+    this.phase=Math.random()*Math.PI*2;
+    this.freq=.010+Math.random()*.012;
+    this.age=0;
+  }
+}
+let beings=[];
+let totalAge=0,totalDied=0;
+
+function reset(){
+  T3.fill(0);T3n.fill(0);beings=[];totalAge=totalDied=0;
+  hN.fill(0);hHot.fill(0);hCold.fill(0);hBorn.fill(0);hDied.fill(0);
+  hHead=hCount=0;smBorn=smDied=0;
+  const E0=+document.getElementById('e0').value;
+  for(let i=0;i<4+(Math.random()*4|0);i++) beings.push(new Ser(null,null,null,null,E0));
+}
+
+// ── Historial y charts ────────────────────────────────────────────────────────
+const HIST=400;
+const hN=new Float32Array(HIST),hHot=new Float32Array(HIST);
+const hCold=new Float32Array(HIST),hBorn=new Float32Array(HIST),hDied=new Float32Array(HIST);
+let hHead=0,hCount=0,smBorn=0,smDied=0,smN=0,smHot=0,smCold=0;
+
+const LM={bg:'#1A1612',grid:'#3D3028',gridLbl:'#5a4a3a',
+  text:'#C9BEB2',accent:'#D9691F',teal:'#009688',good:'#8FB56B',bad:'#D9736F',amber:'#D9A441'};
+
+function lerpHex(a,b,t){
+  const h=c=>c.replace('#','');
+  const p=x=>parseInt(x,16);
+  const ah=h(a),bh=h(b);
+  const ri=p(ah.slice(0,2)),gi=p(ah.slice(2,4)),bi=p(ah.slice(4,6));
+  const rf=p(bh.slice(0,2)),gf=p(bh.slice(2,4)),bf=p(bh.slice(4,6));
+  const hx=v=>Math.round(v).toString(16).padStart(2,'0');
+  return`#${hx(ri+(rf-ri)*t)}${hx(gi+(gf-gi)*t)}${hx(bi+(bf-bi)*t)}`;
+}
+
+function initG(id){
+  const el=document.getElementById(id);
+  el.width=460; el.height=(parseInt(el.getAttribute('height'))||90)*2;
+  return el;
+}
+const gPop=initG('g-pop'),gRate=initG('g-rate'),gEnergy=initG('g-energy');
+const cpop=gPop.getContext('2d'),crate=gRate.getContext('2d'),cenergy=gEnergy.getContext('2d');
+
+function smoothLine(c,xs,ys,n){
+  if(n<2)return; c.moveTo(xs[0],ys[0]); if(n===2){c.lineTo(xs[1],ys[1]);return;}
+  for(let i=0;i<n-1;i++){
+    const p0=Math.max(0,i-1),p1=i,p2=Math.min(n-1,i+1),p3=Math.min(n-1,i+2);
+    const cp1x=xs[p1]+(xs[p2]-xs[p0])/6,cp1y=ys[p1]+(ys[p2]-ys[p0])/6;
+    const cp2x=xs[p2]-(xs[p3]-xs[p1])/6,cp2y=ys[p2]-(ys[p3]-ys[p1])/6;
+    c.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,xs[p2],ys[p2]);
+  }
+}
+
+function drawPop(){
+  const cw=460,ch=gPop.height;
+  cpop.fillStyle=LM.bg;cpop.fillRect(0,0,cw,ch);
+  const len=Math.min(hCount,HIST); if(len<2)return;
+  let mx=1; for(let i=0;i<len;i++) mx=Math.max(mx,hN[(hHead-len+i+HIST)%HIST]);
+  const sc=(ch-10)/(mx*1.2);
+  const xs=new Float32Array(len),ysN=new Float32Array(len),ysH=new Float32Array(len),ysC=new Float32Array(len);
+  for(let i=0;i<len;i++){
+    xs[i]=i/(len-1)*cw;
+    ysN[i]=ch-5-hN[(hHead-len+i+HIST)%HIST]*sc;
+    ysH[i]=ch-5-hHot[(hHead-len+i+HIST)%HIST]*sc;
+    ysC[i]=ch-5-hCold[(hHead-len+i+HIST)%HIST]*sc;
+  }
+  cpop.strokeStyle=LM.grid;cpop.lineWidth=1;cpop.setLineDash([2,4]);
+  cpop.beginPath();cpop.moveTo(0,ch-5-Math.round(mx/2)*sc);cpop.lineTo(cw,ch-5-Math.round(mx/2)*sc);cpop.stroke();
+  cpop.setLineDash([]);
+  for(const [ys,fill] of [[ysH,'rgba(217,105,31,.20)'],[ysC,'rgba(0,150,136,.20)']]){
+    cpop.beginPath();smoothLine(cpop,xs,ys,len);
+    cpop.lineTo(cw,ch);cpop.lineTo(0,ch);cpop.closePath();cpop.fillStyle=fill;cpop.fill();
+  }
+  cpop.beginPath();cpop.strokeStyle=LM.text+'cc';cpop.lineWidth=1.6;
+  smoothLine(cpop,xs,ysN,len);cpop.stroke();
+  cpop.beginPath();cpop.arc(cw-1,ysN[len-1],3.5,0,Math.PI*2);
+  cpop.fillStyle=LM.text;cpop.fill();
+  document.getElementById('lbl-n').textContent=`${beings.length} seres`;
+}
+
+function drawRates(){
+  const cw=460,ch=gRate.height;
+  crate.fillStyle=LM.bg;crate.fillRect(0,0,cw,ch);
+  const len=Math.min(hCount,HIST); if(len<2)return;
+  let mx=1; for(let i=0;i<len;i++) mx=Math.max(mx,hBorn[(hHead-len+i+HIST)%HIST],hDied[(hHead-len+i+HIST)%HIST]);
+  const sc=(ch-10)/(mx*1.3);
+  const xs=new Float32Array(len),ysDied=new Float32Array(len),ysBorn=new Float32Array(len);
+  for(let i=0;i<len;i++){
+    const idx=(hHead-len+i+HIST)%HIST;
+    xs[i]=i/(len-1)*cw;
+    ysDied[i]=ch-5-hDied[idx]*sc;
+    ysBorn[i]=ch-5-hBorn[idx]*sc;
+  }
+  crate.beginPath();crate.strokeStyle=LM.bad+'cc';crate.lineWidth=1.4;
+  smoothLine(crate,xs,ysDied,len);crate.stroke();
+  crate.beginPath();crate.strokeStyle=LM.good+'cc';crate.lineWidth=1.4;
+  smoothLine(crate,xs,ysBorn,len);crate.stroke();
+  const lb=hBorn[(hHead-1+HIST)%HIST],ld=hDied[(hHead-1+HIST)%HIST];
+  crate.font='10px monospace';
+  crate.fillStyle=LM.good+'cc'; crate.fillText(`nac: ${lb.toFixed(1)}`,4,ch-4);
+  crate.fillStyle=LM.bad+'cc';  crate.fillText(`mort: ${ld.toFixed(1)}`,cw*.45,ch-4);
+}
+
+function drawEnergy(){
+  const cw=460,ch=gEnergy.height;
+  cenergy.fillStyle=LM.bg;cenergy.fillRect(0,0,cw,ch);
+  if(!beings.length)return;
+  const E0=+document.getElementById('e0').value;
+  const BINS=20,bins=new Uint16Array(BINS);
+  for(const b of beings){
+    const idx=Math.max(0,Math.min(BINS-1,(b.E/b.E0*BINS)|0));
+    bins[idx]++;
+  }
+  const mx=Math.max(1,...bins);
+  const bw=cw/BINS;
+  for(let i=0;i<BINS;i++){
+    const h=(bins[i]/mx)*(ch-10);if(h<.5)continue;
+    const f=i/(BINS-1);
+    const col=f<.5?lerpHex(LM.bad,LM.amber,f*2):lerpHex(LM.amber,LM.good,(f-.5)*2);
+    cenergy.fillStyle=col+'cc';
+    cenergy.fillRect(i*bw+1,ch-5-h,bw-2,h);
+  }
+  cenergy.fillStyle=LM.gridLbl;cenergy.font='9px monospace';
+  cenergy.fillText('morib.',2,ch-4);cenergy.fillText('vital',cw-30,ch-4);
+  document.getElementById('lbl-e').textContent=`E₀=${E0}`;
+}
+
+// ── Reset inicial ─────────────────────────────────────────────────────────────
+reset();
+
+// ── PIP: selección y orientación del ser seguido ──────────────────────────────
+let pipIdx = 0;   // índice del ser actualmente seguido
+let pipAz  = 0;   // azimuth auto-rotante para la vista interior
+
+// Construye mat3 col-major para una cámara que mira en dirección (vx,vy,vz)
+function makeLookRot(vx, vy, vz) {
+  const len = Math.sqrt(vx*vx+vy*vy+vz*vz) || 1;
+  const fz=vx/len, fy=vy/len, fz2=vz/len;  // forward (el ser "mira" hacia donde va)
+  // up = (0,1,0); right = forward × up
+  let rx = fz2, ry = 0, rz = -fz;
+  const rlen = Math.sqrt(rx*rx+rz*rz) || 1;
+  rx/=rlen; rz/=rlen;
+  // real up = right × forward
+  const ux = ry*fz2 - rz*fy, uy = rz*fz - rx*fz2, uz = rx*fy - ry*fz;
+  // col-major: [right, up, forward]
+  return new Float32Array([rx,ux,fz, ry,uy,fy, rz,uz,fz2]);
+}
+
+// Construye mat3 de rotación simple (yaw) para el giro auto de la PIP
+function makeYaw(az) {
+  const ca=Math.cos(az), sa=Math.sin(az);
+  return new Float32Array([ca,0,-sa, 0,1,0, sa,0,ca]);
+}
+
+// ── Loop principal ────────────────────────────────────────────────────────────
+let tick=0,fpsF=0,fpsT=performance.now();
+
+function loop(now){
+  const alpha  = +document.getElementById('al').value;
+  const lambda = +document.getElementById('lm').value;
+  const mu     = +document.getElementById('me').value;
+  const pBirth = +document.getElementById('pb').value;
+  const E0     = +document.getElementById('e0').value;
+  const repMul = +document.getElementById('re').value;
+  const spf    = +document.getElementById('spf').value;
+
+  let fb=0,fd=0;
+
+  for(let s=0;s<spf;s++){
+    tick++;
+    for(const b of beings){
+      const pulse=.70+.30*Math.sin(tick*b.freq+b.phase);
+      const amp=b.type*A_SER*(b.E/b.E0)*pulse*.10;
+      if(Math.abs(amp)>.01) addGauss3(b.x,b.y,b.z,amp,b.sigma);
+    }
+    diffuse3(alpha,lambda);
+
+    const rem=[],add=[];
+    for(let i=0;i<beings.length;i++){
+      const b=beings[i];b.age++;
+      b.vx+=(Math.random()-.5)*.05;b.vy+=(Math.random()-.5)*.05;b.vz+=(Math.random()-.5)*.05;
+      const sp=Math.sqrt(b.vx**2+b.vy**2+b.vz**2);
+      if(sp>1.0){b.vx=b.vx/sp;b.vy=b.vy/sp;b.vz=b.vz/sp;}
+      b.vx*=.97;b.vy*=.97;b.vz*=.97;
+      b.x+=b.vx;b.y+=b.vy;b.z+=b.vz;
+      // Confinar dentro de la esfera del universo
+      const cx=GW/2,cy=GH/2,cz=GD/2,rMax=(GW/2-b.sigma)*.9;
+      const dx=b.x-cx,dy=b.y-cy,dz=b.z-cz;
+      const dist=Math.sqrt(dx*dx+dy*dy+dz*dz);
+      if(dist>rMax){
+        // reflejar velocidad hacia el interior
+        const nx=dx/dist,ny=dy/dist,nz=dz/dist;
+        const vn=b.vx*nx+b.vy*ny+b.vz*nz;
+        b.vx-=2*vn*nx;b.vy-=2*vn*ny;b.vz-=2*vn*nz;
+        b.x=cx+nx*rMax;b.y=cy+ny*rMax;b.z=cz+nz*rMax;
+      }
+      b.E-=mu*.15;
+      if(b.E<=0){rem.push(i);totalAge+=b.age;totalDied++;fd++;continue;}
+      if(b.E>E0*repMul&&beings.length+add.length<SER_MAX){
+        b.E=E0*.6;
+        const c=new Ser(b.x+(Math.random()-.5)*b.sigma*2,
+                        b.y+(Math.random()-.5)*b.sigma*2,
+                        b.z+(Math.random()-.5)*b.sigma*2,b.type,E0);
+        c.E=E0*.4;c.sigma=b.sigma*(.85+Math.random()*.3);add.push(c);fb++;
+      }
+    }
+    for(let i=rem.length-1;i>=0;i--) beings.splice(rem[i],1);
+    for(const c of add) beings.push(c);
+    for(let n=0;n<pBirth;n++){
+      if(Math.random()>.02)continue;
+      if(beings.length>=SER_MAX)break;
+      beings.push(new Ser(null,null,null,null,E0));fb++;
+    }
+  }
+
+  // historial — todo suavizado para curvas sin serrucho
+  const α=.06;          // suavizado lento → curvas más fluidas
+  const hot=beings.filter(b=>b.type>0).length,cold=beings.length-hot;
+  smBorn =α*fb          +(1-α)*smBorn;
+  smDied =α*fd          +(1-α)*smDied;
+  smN    =α*beings.length+(1-α)*smN;
+  smHot  =α*hot         +(1-α)*smHot;
+  smCold =α*cold        +(1-α)*smCold;
+  hN[hHead]=smN;hHot[hHead]=smHot;hCold[hHead]=smCold;
+  hBorn[hHead]=smBorn;hDied[hHead]=smDied;
+  hHead=(hHead+1)%HIST;hCount++;
+
+  // upload & render
+  uploadVolume();
+  pipAz += 0.005;  // giro lento auto de la vista interior
+
+  // ── 1. Vista exterior (pantalla completa) ─────────────────────────────────
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.uniform2f(uRes, canvas.width, canvas.height);
+  gl.uniform1i(uPip, 0);
+  gl.uniformMatrix3fv(uRot, false, makeRot3(azimuth, elevation));
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  // ── 2. PIP interior ───────────────────────────────────────────────────────
+  if(beings.length > 0){
+    // Seleccionar el ser más energético si el índice actual murió
+    if(pipIdx >= beings.length) pipIdx = 0;
+    const pb = beings[pipIdx];
+
+    // Posición normalizada en [0,1]³
+    const px = pb.x/GW, py = pb.y/GH, pz = pb.z/GD;
+
+    // Orientación: giro auto (el "ser mira alrededor") con el yaw de su velocidad
+    const rot = makeYaw(pipAz + Math.atan2(pb.vx, pb.vz));
+
+    const PW = 280, PH = 180;
+    // CSS: right:14px bottom:14px → GL origin = bottom-left del canvas
+    // GL x = canvas.width - PW - 14
+    // GL y = 14  (CSS bottom == GL y, ambos miden desde abajo)
+    const glX = canvas.width  - PW - 14;
+    const glY = 14;
+
+    gl.enable(gl.SCISSOR_TEST);
+    gl.viewport(glX, glY, PW, PH);
+    gl.scissor(glX, glY, PW, PH);
+    gl.uniform2f(uRes, PW, PH);
+    gl.uniform1i(uPip, 1);
+    gl.uniform3f(uPipPos, px, py, pz);
+    gl.uniformMatrix3fv(uPipRot, false, rot);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    gl.disable(gl.SCISSOR_TEST);
+
+    document.getElementById('pip-who').textContent =
+      `ser #${pipIdx} · ${pb.type>0?'♨':'❄'} · E=${Math.round(pb.E)}`;
+  }
+
+  // charts & DOM
+  drawPop();drawRates();drawEnergy();
+  document.getElementById('cnt').textContent=beings.length;
+  document.getElementById('hot').textContent=hot;
+  document.getElementById('cold').textContent=cold;
+  document.getElementById('vida').textContent=totalDied>0?Math.round(totalAge/totalDied/spf)+'f':'—';
+  fpsF++;
+  if(now-fpsT>1000){
+    document.getElementById('fps').textContent=Math.round(fpsF*1000/(now-fpsT))+' fps · 3D '+GW+'×'+GH+'×'+GD;
+    fpsF=0;fpsT=now;
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ── Controles ─────────────────────────────────────────────────────────────────
+document.getElementById('al').oninput=function(){document.getElementById('alo').textContent=(+this.value).toFixed(2);};
+document.getElementById('lm').oninput=function(){document.getElementById('lmo').textContent=(+this.value).toFixed(3);};
+document.getElementById('me').oninput=function(){document.getElementById('meo').textContent=(+this.value).toFixed(1);};
+document.getElementById('pb').oninput=function(){document.getElementById('pbo').textContent=this.value;};
+document.getElementById('e0').oninput=function(){document.getElementById('e0o').textContent=this.value;};
+document.getElementById('re').oninput=function(){document.getElementById('reo').textContent=(+this.value).toFixed(1)+'×E₀';};
+document.getElementById('spf').oninput=function(){document.getElementById('spfo').textContent=this.value;};
+document.getElementById('reset').onclick=reset;
+
+// Tab → seguir el siguiente ser
+window.addEventListener('keydown', e=>{
+  if(e.code==='Tab'){
+    e.preventDefault();
+    if(beings.length>0) pipIdx=(pipIdx+1)%beings.length;
+  }
+});
+
+// Clic → nuevo ser (estimando z = centro del volumen)
+canvas.addEventListener('click', e=>{
+  if(dragging) return;
+  if(beings.length>=SER_MAX) return;
+  const E0=+document.getElementById('e0').value;
+  beings.push(new Ser(
+    ((e.clientX/window.innerWidth)*.8+.1)*GW,
+    ((e.clientY/window.innerHeight)*.8+.1)*GH,
+    (.1+Math.random()*.8)*GD, null, E0
+  ));
+});
+</script>
+</body>
+</html>

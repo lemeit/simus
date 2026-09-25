@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seres Térmicos — v0.2 Gradiente</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#020307;
+  color:#ddd;font-family:system-ui,'Segoe UI',sans-serif}
+canvas{display:block;width:100vw;height:100vh;image-rendering:pixelated}
+.panel{position:fixed;left:16px;bottom:16px;width:min(320px,calc(100vw - 32px));
+  padding:13px 15px;background:rgba(5,7,12,.82);border:1px solid rgba(255,255,255,.1);
+  border-radius:11px;backdrop-filter:blur(10px);font-size:12px;line-height:1.5}
+.panel h1{font-size:14px;margin:0 0 2px;letter-spacing:.04em}
+.sub{color:#778;margin-bottom:9px;font-size:11px}
+.row{display:flex;align-items:center;gap:8px;margin:4px 0}
+.row span{width:110px;color:#99a}
+.row output{width:36px;text-align:right;color:#eee;font-variant-numeric:tabular-nums}
+input{flex:1;accent-color:#c87}
+#fps{position:fixed;right:14px;top:12px;color:#444;font:11px monospace}
+.eq{color:#6af;font:11px monospace;margin-top:8px;padding:6px 8px;
+    background:#050810;border-radius:6px;border:1px solid #1a2030}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="panel">
+  <h1>SERES TÉRMICOS · v0.2</h1>
+  <div class="sub">Campo 2D acoplado: seres leen ∇T y responden</div>
+  <div class="row"><span>Seres (hot/cold)</span>
+    <input id="ns" type="range" min="1" max="6" value="3" step="1">
+    <output id="nso">3+3</output></div>
+  <div class="row"><span>Difusión α</span>
+    <input id="al" type="range" min="1" max="60" value="22">
+    <output id="alo">0.22</output></div>
+  <div class="row"><span>Acoplamiento k</span>
+    <input id="kk" type="range" min="0" max="100" value="42">
+    <output id="kko">0.42</output></div>
+  <div class="row"><span>Enfriamiento λ</span>
+    <input id="lm" type="range" min="0" max="50" value="12">
+    <output id="lmo">0.012</output></div>
+  <div class="eq">dT/dt = α∇²T + S(x,y,t) − λT<br>F_i = ±k·∇T(x_i,y_i)</div>
+</div>
+<div id="fps"></div>
+
+<script>
+'use strict';
+// ── Canvas y contexto ───────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+
+// Grilla de simulación (independiente del canvas CSS)
+const GW = 240, GH = 180;
+let imgData, px;
+
+function resizeCanvas() {
+  // Canvas físico = tamaño de la ventana * DPR (hasta 2)
+  // pero los píxeles de la grilla se escalan con CSS (image-rendering:pixelated)
+  canvas.width  = GW;
+  canvas.height = GH;
+  imgData = ctx.createImageData(GW, GH);
+  px = imgData.data;
+}
+resizeCanvas();
+
+// ── Campo térmico T[GW×GH] ──────────────────────────────────────────────────
+// Valores en [-MAX_T, MAX_T]. > 0 = caliente, < 0 = frío.
+const MAX_T  = 120;
+let T    = new Float32Array(GW * GH);
+let Tnxt = new Float32Array(GW * GH);
+const idx = (x, y) => x + GW * y;
+
+// ── Seres térmicos ──────────────────────────────────────────────────────────
+// type: +1 = caliente (naranja), -1 = frío (azul/cyan)
+// Acoplamiento: caliente busca gradiente negativo (huye del calor),
+//               frío    busca gradiente positivo (va hacia el calor)
+// → se persiguen mutuamente a través del campo
+let beings = [];
+
+function makeBeing(type, x, y) {
+  return {
+    x: x ?? (0.15 + Math.random() * 0.7) * GW,
+    y: y ?? (0.15 + Math.random() * 0.7) * GH,
+    vx: (Math.random() - .5) * .6,
+    vy: (Math.random() - .5) * .6,
+    type,                          // +1 caliente / -1 frío
+    amp: type * (80 + Math.random() * 40),
+    sigma: 8 + Math.random() * 5,
+    phase: Math.random() * Math.PI * 2,
+    freq:  .012 + Math.random() * .010,
+  };
+}
+
+function resetBeings() {
+  beings = [];
+  const n = +document.getElementById('ns').value;
+  for (let i = 0; i < n; i++) beings.push(makeBeing(+1));
+  for (let i = 0; i < n; i++) beings.push(makeBeing(-1));
+  document.getElementById('nso').textContent = `${n}+${n}`;
+}
+resetBeings();
+
+// ── Física: fuente gaussiana ────────────────────────────────────────────────
+function addGaussian(bx, by, amp, sigma) {
+  const r = Math.ceil(sigma * 2.5) | 0;
+  const cx = bx | 0, cy = by | 0;
+  const inv2s2 = 1 / (2 * sigma * sigma);
+  for (let j = Math.max(1, cy-r); j < Math.min(GH-1, cy+r+1); j++)
+    for (let i = Math.max(1, cx-r); i < Math.min(GW-1, cx+r+1); i++) {
+      const d2 = (i-bx)*(i-bx) + (j-by)*(j-by);
+      T[idx(i,j)] += amp * Math.exp(-d2 * inv2s2);
+    }
+}
+
+// ── Física: leer gradiente ∇T en (bx, by) (diferencias centradas) ──────────
+function gradT(bx, by) {
+  const xi = Math.max(1, Math.min(GW-2, bx | 0));
+  const yi = Math.max(1, Math.min(GH-2, by | 0));
+  return {
+    gx: (T[idx(xi+1, yi)] - T[idx(xi-1, yi)]) * .5,
+    gy: (T[idx(xi, yi+1)] - T[idx(xi, yi-1)]) * .5,
+  };
+}
+
+// ── Física: paso de difusión ────────────────────────────────────────────────
+function diffuseStep(alpha, lambda) {
+  const k = alpha * 0.14; // α·Δt/Δx² — elegido por estabilidad
+  for (let j = 1; j < GH-1; j++)
+    for (let i = 1; i < GW-1; i++) {
+      const c = idx(i,j);
+      const lap = T[idx(i+1,j)] + T[idx(i-1,j)] +
+                  T[idx(i,j+1)] + T[idx(i,j-1)] - 4*T[c];
+      Tnxt[c] = T[c] + k * lap - lambda * T[c];
+    }
+  // Borde Neumann
+  for (let i = 0; i < GW; i++) {
+    Tnxt[idx(i,0)]    = Tnxt[idx(i,1)];
+    Tnxt[idx(i,GH-1)] = Tnxt[idx(i,GH-2)];
+  }
+  for (let j = 0; j < GH; j++) {
+    Tnxt[idx(0,j)]    = Tnxt[idx(1,j)];
+    Tnxt[idx(GW-1,j)] = Tnxt[idx(GW-2,j)];
+  }
+  const tmp = T; T = Tnxt; Tnxt = tmp;
+}
+
+// ── Colormap divergente ─────────────────────────────────────────────────────
+// v ∈ [-1,1]: negativo=frío(azul), cero=negro, positivo=caliente(naranja)
+function tempRGB(v) {
+  let r, g, b;
+  if (v >= 0) {
+    if (v < .30) { const u=v/.30; r=u*185; g=0; b=0; }
+    else if (v < .60) { const u=(v-.30)/.30; r=185+u*70; g=u*110; b=0; }
+    else if (v < .85) { const u=(v-.60)/.25; r=255; g=110+u*120; b=u*50; }
+    else { const u=(v-.85)/.15; r=255; g=230+u*25; b=50+u*205; }
+  } else {
+    const w=-v;
+    if (w < .30) { const u=w/.30; r=0; g=0; b=u*190; }
+    else if (w < .60) { const u=(w-.30)/.30; r=0; g=u*150; b=190+u*55; }
+    else if (w < .85) { const u=(w-.60)/.25; r=u*20; g=150+u*90; b=245+u*10; }
+    else { const u=(w-.85)/.15; r=20+u*170; g=240+u*15; b=255; }
+  }
+  return [r|0, g|0, b|0];
+}
+
+// ── Render ──────────────────────────────────────────────────────────────────
+function render() {
+  for (let j = 0; j < GH; j++)
+    for (let i = 0; i < GW; i++) {
+      const v = Math.max(-1, Math.min(1, T[idx(i,j)] / MAX_T));
+      const [r,g,b] = tempRGB(v);
+      const p = (j*GW + i)*4;
+      px[p]=r; px[p+1]=g; px[p+2]=b; px[p+3]=255;
+    }
+  ctx.putImageData(imgData, 0, 0);
+
+  // Dibujar seres encima como círculos luminosos
+  for (const b of beings) {
+    const absT = Math.abs(T[idx(b.x|0, b.y|0)]) / MAX_T;
+    const rr = 3 + 2 * absT;
+    const hue = b.type > 0 ? `30` : `195`;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, rr, 0, Math.PI*2);
+    ctx.fillStyle = `hsla(${hue},100%,${70+20*absT}%,.85)`;
+    ctx.fill();
+    // núcleo blanco cuando está muy caliente/frío
+    if (absT > .5) {
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, rr*.3, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,.7)`;
+      ctx.fill();
+    }
+  }
+}
+
+// ── Loop principal ──────────────────────────────────────────────────────────
+document.getElementById('al').oninput = function(){ document.getElementById('alo').textContent=(this.value/100).toFixed(2); };
+document.getElementById('kk').oninput = function(){ document.getElementById('kko').textContent=(this.value/100).toFixed(2); };
+document.getElementById('lm').oninput = function(){ document.getElementById('lmo').textContent=(this.value/1000).toFixed(3); };
+document.getElementById('ns').oninput = function(){ resetBeings(); };
+document.getElementById('reset').onclick = function(){ T.fill(0); Tnxt.fill(0); resetBeings(); };
+
+let tick = 0, fpsFrames = 0, fpsTime = performance.now(), lastTime = performance.now();
+
+function loop(now) {
+  const dt     = Math.min((now - lastTime) / 16.67, 2); lastTime = now;
+  const alpha  = +document.getElementById('al').value / 100;
+  const kCoup  = +document.getElementById('kk').value / 100 * .04; // escala acoplamiento
+  const lambda = +document.getElementById('lm').value / 1000;      // enfriamiento
+
+  // 2 pasos de física por frame para más dinámica
+  for (let s = 0; s < 2; s++) {
+    // Inyectar cada ser en el campo
+    for (const b of beings) {
+      const pulse = .70 + .30 * Math.sin(tick * b.freq + b.phase);
+      addGaussian(b.x, b.y, b.amp * pulse * .10, b.sigma);
+    }
+    diffuseStep(alpha, lambda);
+    tick++;
+  }
+
+  // Mover seres: fuerzas = inercia + gradiente ∇T (acoplamiento) + drift aleatorio
+  for (const b of beings) {
+    const { gx, gy } = gradT(b.x, b.y);
+
+    // Un ser caliente (type=+1) huye del gradiente positivo (va a frío)
+    // Un ser frío (type=-1) sigue el gradiente positivo (va a caliente)
+    // → se atraen mutuamente a través del campo
+    b.vx += -b.type * kCoup * gx * dt;
+    b.vy += -b.type * kCoup * gy * dt;
+
+    // Atracción débil hacia el centro (para que no se escapen)
+    b.vx += (.5*GW - b.x) * .0002 * dt;
+    b.vy += (.5*GH - b.y) * .0002 * dt;
+
+    // Pequeño ruido térmico
+    b.vx += (Math.random() - .5) * .04 * dt;
+    b.vy += (Math.random() - .5) * .04 * dt;
+
+    // Amortiguación
+    b.vx *= Math.pow(.978, dt);
+    b.vy *= Math.pow(.978, dt);
+
+    // Límite de velocidad: evita que el gradiente dispare al ser fuera de pantalla
+    const spd = Math.hypot(b.vx, b.vy);
+    if (spd > 2.5) { b.vx = b.vx/spd*2.5; b.vy = b.vy/spd*2.5; }
+
+    b.x += b.vx * dt;
+    b.y += b.vy * dt;
+
+    // Rebotar en bordes
+    const pad = b.sigma;
+    if (b.x < pad)      { b.x = pad;      b.vx = Math.abs(b.vx); }
+    if (b.x > GW - pad) { b.x = GW - pad; b.vx = -Math.abs(b.vx); }
+    if (b.y < pad)      { b.y = pad;      b.vy = Math.abs(b.vy); }
+    if (b.y > GH - pad) { b.y = GH - pad; b.vy = -Math.abs(b.vy); }
+  }
+
+  render();
+
+  fpsFrames++;
+  if (now - fpsTime > 1000) {
+    document.getElementById('fps').textContent =
+      `${Math.round(fpsFrames*1000/(now-fpsTime))} fps · ${GW}×${GH}`;
+    fpsFrames = 0; fpsTime = now;
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

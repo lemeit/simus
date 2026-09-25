@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seres Térmicos — v0.8 Espaciotiempo</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f0d0a;--surface:#1A1612;--surface2:#221E18;--border:#3D3028;
+  --text:#F2ECE4;--dim:#C9BEB2;--accent:#D9691F;--good:#8FB56B;
+  --bad:#D9736F;--teal:#009688;--amber:#D9A441;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#000;
+  color:var(--text);font-family:'JetBrains Mono',monospace}
+#c{display:block;width:100vw;height:100vh}
+.ctrl{position:fixed;left:14px;bottom:14px;width:238px;padding:11px 12px;
+  background:rgba(26,22,18,.96);border:1px solid var(--border);
+  border-radius:10px;backdrop-filter:blur(12px);overflow:hidden}
+.ctrl h1{font-size:12px;margin:0 0 1px;letter-spacing:.06em;color:var(--accent);font-weight:700}
+.sub{color:#5a4a3a;margin-bottom:6px;font-size:9px;line-height:1.4}
+.row{display:flex;align-items:center;gap:5px;margin:2px 0}
+.row span{width:80px;color:#7a6555;font-size:10px;flex-shrink:0}
+.row output{width:44px;text-align:right;color:var(--dim);font-size:9px;
+  font-family:'JetBrains Mono',monospace;flex-shrink:0;overflow:hidden}
+input[type=range]{flex:1;min-width:0;accent-color:var(--accent);height:3px;cursor:pointer;
+  -webkit-appearance:none;appearance:none;background:var(--border);border-radius:2px}
+input[type=range]::-webkit-slider-thumb{width:10px;height:10px;-webkit-appearance:none;
+  background:var(--accent);border-radius:50%;margin-top:-3.5px}
+input[type=range]::-moz-range-thumb{width:10px;height:10px;background:var(--accent);
+  border:none;border-radius:50%}
+.btn{margin-top:5px;background:var(--surface2);color:var(--dim);border:1px solid var(--border);
+  border-radius:5px;padding:4px 8px;cursor:pointer;font-size:10px;width:100%;
+  font-family:'JetBrains Mono',monospace}
+.btn:hover{background:var(--border);color:var(--text)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:4px;
+  margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
+.stat{text-align:center;background:var(--surface2);border:1px solid var(--border);
+  border-radius:5px;padding:4px 2px;overflow:hidden;min-width:0}
+.stat .v{font-size:12px;line-height:1.2;font-family:'JetBrains Mono',monospace;
+  color:var(--dim);white-space:nowrap;overflow:hidden;display:block}
+.stat .l{font-size:8px;color:#5a4a3a;margin-top:2px;display:block}
+.stat.s-hot .v{color:var(--accent)} .stat.s-t .v{color:var(--amber)}
+.legend{position:fixed;right:14px;bottom:14px;background:rgba(26,22,18,.94);
+  border:1px solid var(--border);border-radius:9px;padding:8px 10px;
+  backdrop-filter:blur(12px);font-size:9px;line-height:1.6;color:#5a4a3a}
+.legend b{color:var(--dim)}
+.legend .band{display:inline-block;width:10px;height:10px;border-radius:2px;
+  vertical-align:middle;margin-right:4px}
+#fps{position:fixed;right:14px;top:10px;color:#1a1008;font-size:9px}
+#hint{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;
+  color:#1a1008;font-size:9px;pointer-events:none}
+.info-tag{position:fixed;top:14px;left:50%;transform:translateX(-50%);
+  color:#3a2a1a;font-size:9px;letter-spacing:.1em;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="ctrl">
+  <h1>SERES TÉRMICOS · v0.8 · 4D</h1>
+  <div class="sub">espacio 2D × tiempo → volumen 3D<br>"worldtubes" de Borges</div>
+  <div class="row"><span>Difusión α</span>
+    <input id="al" type="range" min="0.05" max="0.40" step="0.01" value="0.20">
+    <output id="alo">0.20</output></div>
+  <div class="row"><span>Vacío λ</span>
+    <input id="lm" type="range" min="0.001" max="0.020" step="0.001" value="0.006">
+    <output id="lmo">0.006</output></div>
+  <div class="row"><span>Metabolismo μ</span>
+    <input id="me" type="range" min="0.1" max="5.0" step="0.1" value="1.0">
+    <output id="meo">1.0</output></div>
+  <div class="row"><span>Nac./frame</span>
+    <input id="pb" type="range" min="0" max="10" step="1" value="3">
+    <output id="pbo">3</output></div>
+  <div class="row"><span>Energía E₀</span>
+    <input id="e0" type="range" min="50" max="500" step="10" value="150">
+    <output id="e0o">150</output></div>
+  <div class="row"><span>Reprod.</span>
+    <input id="re" type="range" min="1.2" max="4.0" step="0.1" value="2.0">
+    <output id="reo">2.0×E₀</output></div>
+  <div class="row"><span>Vel. tiempo t</span>
+    <input id="ts" type="range" min="0.2" max="3.0" step="0.1" value="1.0">
+    <output id="tso">1.0</output></div>
+  <button class="btn" id="reset">reiniciar</button>
+  <div class="stats">
+    <div class="stat"><div class="v" id="cnt">0</div><div class="l">seres actuales</div></div>
+    <div class="stat s-hot"><div class="v" id="born">0</div><div class="l">total nac.</div></div>
+    <div class="stat s-t"><div class="v" id="tSlice">0</div><div class="l">slice t actual</div></div>
+    <div class="stat"><div class="v" id="vida">—</div><div class="l">vida media</div></div>
+  </div>
+</div>
+
+<div class="legend">
+  <b>Worldtubes de seres</b><br>
+  <span class="band" style="background:#D9691F"></span>calientes (T&gt;0)<br>
+  <span class="band" style="background:#009688"></span>fríos (T&lt;0)<br>
+  <span class="band" style="background:#ffffff22"></span>pasado ← → presente<br>
+  Nacimiento = inicio del tubo<br>
+  Muerte = fin del tubo<br>
+  Reproducción = bifurcación
+</div>
+
+<div class="info-tag">← pasado · eje t · presente →</div>
+<div id="fps"></div>
+<div id="hint">arrastrar → rotar · espacio → pausa</div>
+
+<script>
+'use strict';
+
+// ── WebGL2 ────────────────────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+canvas.width  = window.innerWidth;
+canvas.height = window.innerHeight;
+window.addEventListener('resize', ()=>{
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+  gl.viewport(0,0,canvas.width,canvas.height);
+});
+
+const gl = canvas.getContext('webgl2', {antialias:false});
+if (!gl) { alert('WebGL2 no disponible'); }
+
+// ── Shaders ───────────────────────────────────────────────────────────────────
+const VS = `#version 300 es
+in vec2 a_pos; out vec2 v_uv;
+void main(){ v_uv=a_pos*.5+.5; gl_Position=vec4(a_pos,0,1); }`;
+
+const FS = `#version 300 es
+precision highp float;
+precision highp sampler3D;
+uniform sampler3D u_vol;
+uniform mat3 u_rot;
+uniform vec2 u_res;
+uniform float u_tFrac; // fracción del volumen que tiene datos reales (0..1)
+in vec2 v_uv;
+out vec4 fragColor;
+
+// Colores del tema lemeit
+const vec3 C_HOT  = vec3(0.851, 0.412, 0.122);  // #D9691F
+const vec3 C_COLD = vec3(0.000, 0.588, 0.533);  // #009688
+const vec3 C_AMB  = vec3(0.851, 0.643, 0.255);  // #D9A441
+
+vec2 boxHit(vec3 ro, vec3 rd){
+  vec3 t0=(vec3(0.)-ro)/rd, t1=(vec3(1.)-ro)/rd;
+  return vec2(max(max(min(t0.x,t1.x),min(t0.y,t1.y)),min(t0.z,t1.z)),
+              min(min(max(t0.x,t1.x),max(t0.y,t1.y)),max(t0.z,t1.z)));
+}
+
+void main(){
+  float aspect = u_res.x / u_res.y;
+  vec2 ndc = (v_uv*2.0-1.0)*vec2(aspect,1.0);
+
+  vec3 camLocal = vec3(0.0, 0.0, -2.1);
+  vec3 camWorld = u_rot * camLocal + vec3(.5);
+  vec3 dirWorld = normalize(u_rot * vec3(ndc*0.35, 1.0));
+
+  vec2 hit = boxHit(camWorld, dirWorld);
+  if(hit.x > hit.y || hit.y < 0.0){
+    fragColor=vec4(0,0,0,1); return;
+  }
+
+  float tA = max(hit.x, 0.001);
+  float tB = hit.y;
+  const int STEPS = 180;
+  float dt = (tB-tA)/float(STEPS);
+
+  vec3 color = vec3(0.0);
+  float alpha = 0.0;
+
+  for(int i=0; i<STEPS; i++){
+    vec3 p = camWorld + dirWorld*(tA+float(i)*dt);
+    // p.z es el eje tiempo: sólo muestrear hasta el slice actual
+    if(p.z > u_tFrac) break;
+    vec4 vox = texture(u_vol, p);
+    float hot  = vox.r;
+    float cold = vox.b;
+    float mag  = max(hot, cold);
+    if(mag > 0.015){
+      // Colorear por tipo (canal G codifica caliente=1, frío=0)
+      float isHot = step(cold, hot);
+      vec3 emit = mix(C_COLD, C_HOT, isHot);
+      // Añadir un tono ámbar para seres de alta energía (canal G = energía norm.)
+      emit = mix(emit, C_AMB, vox.g*0.4);
+      float sigma = mag * 16.0 * dt;
+      float a2 = 1.0 - exp(-sigma);
+      color += (1.0-alpha)*a2*emit;
+      alpha += (1.0-alpha)*a2;
+      if(alpha > 0.99) break;
+    }
+  }
+  // Borde tenue del cubo de historia
+  fragColor = vec4(color, 1.0);
+}`;
+
+function compileShader(type,src){
+  const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
+  return s;
+}
+const prog=gl.createProgram();
+gl.attachShader(prog,compileShader(gl.VERTEX_SHADER,VS));
+gl.attachShader(prog,compileShader(gl.FRAGMENT_SHADER,FS));
+gl.linkProgram(prog);
+if(!gl.getProgramParameter(prog,gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+
+const vbuf=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,vbuf);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+const aloc=gl.getAttribLocation(prog,'a_pos');
+gl.enableVertexAttribArray(aloc);gl.vertexAttribPointer(aloc,2,gl.FLOAT,false,0,0);
+
+const uVol   = gl.getUniformLocation(prog,'u_vol');
+const uRot   = gl.getUniformLocation(prog,'u_rot');
+const uRes   = gl.getUniformLocation(prog,'u_res');
+const uTFrac = gl.getUniformLocation(prog,'u_tFrac');
+gl.uniform1i(uVol,0);
+
+// ── Textura 3D espaciotiempo ──────────────────────────────────────────────────
+// x,y = espacio 2D; z = tiempo (slices)
+const GW=80, GH=60, GT=64;     // dimensiones del volumen spacetime
+const sliceSize = GW*GH*4;
+const texData = new Uint8Array(GW*GH*GT*4);
+
+const tex3d=gl.createTexture();
+gl.bindTexture(gl.TEXTURE_3D,tex3d);
+gl.texImage3D(gl.TEXTURE_3D,0,gl.RGBA,GW,GH,GT,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_3D,gl.TEXTURE_WRAP_R,gl.CLAMP_TO_EDGE);
+
+let currentSlice=0;  // siguiente slice a escribir (0..GT-1)
+let sliceCount=0;    // cuántos slices hemos llenado
+
+// sliceBuffer: datos de la slice actual para subir
+const sliceBuf = new Uint8Array(sliceSize);
+
+function writeSlice(T2, beings){
+  const T_MAX=80;
+  // Resetear el buffer
+  sliceBuf.fill(0);
+  // Escribir el campo térmico
+  for(let j=0;j<GH;j++)
+    for(let i=0;i<GW;i++){
+      const src=i+GW*j, dst=src*4;
+      const v=T2[src];
+      sliceBuf[dst]  = v>0  ? Math.min(255,v/T_MAX*255)|0 : 0;
+      sliceBuf[dst+1]= 0;
+      sliceBuf[dst+2]= v<0  ? Math.min(255,-v/T_MAX*255)|0 : 0;
+      sliceBuf[dst+3]= 200;
+    }
+  // Pintar marcas de seres sobre el campo (canal G = energía normalizada)
+  for(const b of beings){
+    const bx=Math.round(b.x),by=Math.round(b.y);
+    const sig=Math.ceil(b.sigma)|0;
+    for(let dy=-sig;dy<=sig;dy++)for(let dx=-sig;dx<=sig;dx++){
+      const x=bx+dx,y=by+dy;
+      if(x<0||x>=GW||y<0||y>=GH)continue;
+      const d2=dx*dx+dy*dy;
+      if(d2>sig*sig)continue;
+      const dst=(x+GW*y)*4;
+      const g=Math.exp(-d2/(2*b.sigma*b.sigma));
+      // G = energía normalizada del ser (para tono ámbar en shader)
+      sliceBuf[dst+1]=Math.min(255,(b.E/b.E0*g*255)|0);
+      // Reforzar canal del tipo
+      if(b.type>0) sliceBuf[dst]   =Math.min(255,sliceBuf[dst]  +(g*180|0));
+      else         sliceBuf[dst+2] =Math.min(255,sliceBuf[dst+2]+(g*180|0));
+    }
+  }
+  // Subir al slice z=currentSlice
+  gl.bindTexture(gl.TEXTURE_3D,tex3d);
+  gl.texSubImage3D(gl.TEXTURE_3D,0,0,0,currentSlice,GW,GH,1,gl.RGBA,gl.UNSIGNED_BYTE,sliceBuf);
+  currentSlice=(currentSlice+1)%GT;
+  sliceCount=Math.min(sliceCount+1,GT);
+}
+
+// ── Rotación mouse ────────────────────────────────────────────────────────────
+let azimuth=-0.5, elevation=0.25;
+let dragging=false,lastX=0,lastY=0;
+canvas.addEventListener('mousedown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;});
+window.addEventListener('mouseup',()=>dragging=false);
+window.addEventListener('mousemove',e=>{
+  if(!dragging)return;
+  azimuth+=(e.clientX-lastX)*.009;elevation+=(e.clientY-lastY)*.009;
+  elevation=Math.max(-1.3,Math.min(1.3,elevation));
+  lastX=e.clientX;lastY=e.clientY;
+});
+canvas.addEventListener('touchstart',e=>{dragging=true;lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;},{passive:true});
+window.addEventListener('touchend',()=>dragging=false);
+window.addEventListener('touchmove',e=>{
+  if(!dragging)return;
+  azimuth+=(e.touches[0].clientX-lastX)*.009;elevation+=(e.touches[0].clientY-lastY)*.009;
+  elevation=Math.max(-1.3,Math.min(1.3,elevation));
+  lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;
+},{passive:true});
+
+// Pausa con espacio
+let paused=false;
+window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();paused=!paused;}});
+
+function makeRot3(az,el){
+  const ca=Math.cos(az),sa=Math.sin(az),ce=Math.cos(el),se=Math.sin(el);
+  return new Float32Array([ca,0,-sa,sa*se,ce,ca*se,sa*ce,-se,ca*ce]);
+}
+
+// ── Simulación 2D ─────────────────────────────────────────────────────────────
+const N2=GW*GH;
+let T2=new Float32Array(N2),T2n=new Float32Array(N2);
+const idx2=(i,j)=>i+GW*j;
+
+function diffuse2(alpha,lambda){
+  const k=alpha*.20;
+  for(let j=1;j<GH-1;j++)
+    for(let i=1;i<GW-1;i++){
+      const c=idx2(i,j);
+      const lap=T2[idx2(i+1,j)]+T2[idx2(i-1,j)]+T2[idx2(i,j+1)]+T2[idx2(i,j-1)]-4*T2[c];
+      T2n[c]=T2[c]+k*lap-lambda*T2[c];
+    }
+  for(let j=0;j<GH;j++){T2n[idx2(0,j)]=T2n[idx2(1,j)];T2n[idx2(GW-1,j)]=T2n[idx2(GW-2,j)];}
+  for(let i=0;i<GW;i++){T2n[idx2(i,0)]=T2n[idx2(i,1)];T2n[idx2(i,GH-1)]=T2n[idx2(i,GH-2)];}
+  const tmp=T2;T2=T2n;T2n=tmp;
+}
+
+function addGauss2(bx,by,amp,sigma){
+  const r=Math.ceil(sigma*2.5)|0,inv=1/(2*sigma*sigma);
+  const cx=bx|0,cy=by|0;
+  for(let j=Math.max(1,cy-r);j<Math.min(GH-1,cy+r+1);j++)
+    for(let i=Math.max(1,cx-r);i<Math.min(GW-1,cx+r+1);i++)
+      T2[idx2(i,j)]+=amp*Math.exp(-((i-bx)**2+(j-by)**2)*inv);
+}
+
+const A_SER=60, SER_MAX=55;
+
+class Ser{
+  constructor(x,y,type,E0){
+    this.x=x??(0.1+Math.random()*.8)*GW;
+    this.y=y??(0.1+Math.random()*.8)*GH;
+    this.type=type??(Math.random()<.5?1:-1);
+    this.E=E0*(.5+Math.random()*.5);this.E0=E0;
+    this.sigma=2.8+Math.random()*2.2;
+    this.vx=(Math.random()-.5)*.3;this.vy=(Math.random()-.5)*.3;
+    this.phase=Math.random()*Math.PI*2;this.freq=.010+Math.random()*.012;this.age=0;
+  }
+}
+let beings=[],totalAge=0,totalDied=0,totalBorn=0;
+
+function reset(){
+  T2.fill(0);T2n.fill(0);beings=[];totalAge=totalDied=totalBorn=0;
+  currentSlice=0;sliceCount=0;
+  texData.fill(0);
+  gl.bindTexture(gl.TEXTURE_3D,tex3d);
+  gl.texImage3D(gl.TEXTURE_3D,0,gl.RGBA,GW,GH,GT,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+  const E0=+document.getElementById('e0').value;
+  for(let i=0;i<3+(Math.random()*4|0);i++){beings.push(new Ser(null,null,null,E0));totalBorn++;}
+}
+
+// ── Loop ──────────────────────────────────────────────────────────────────────
+let tick=0,fpsF=0,fpsT=performance.now(),sliceAcc=0;
+
+function loop(now){
+  fpsF++;
+  if(now-fpsT>1000){
+    document.getElementById('fps').textContent=
+      Math.round(fpsF*1000/(now-fpsT))+' fps · spacetime '+GW+'×'+GH+'×'+GT;
+    fpsF=0;fpsT=now;
+  }
+
+  if(!paused){
+    const alpha  = +document.getElementById('al').value;
+    const lambda = +document.getElementById('lm').value;
+    const mu     = +document.getElementById('me').value;
+    const pBirth = +document.getElementById('pb').value;
+    const E0     = +document.getElementById('e0').value;
+    const repMul = +document.getElementById('re').value;
+    const tSpeed = +document.getElementById('ts').value;
+
+    tick++;
+    // inyectar seres
+    for(const b of beings){
+      const pulse=.70+.30*Math.sin(tick*b.freq+b.phase);
+      const amp=b.type*A_SER*(b.E/b.E0)*pulse*.08;
+      if(Math.abs(amp)>.01) addGauss2(b.x,b.y,amp,b.sigma);
+    }
+    diffuse2(alpha,lambda);
+
+    const rem=[],add=[];
+    for(let i=0;i<beings.length;i++){
+      const b=beings[i];b.age++;
+      b.vx+=(Math.random()-.5)*.05;b.vy+=(Math.random()-.5)*.05;
+      const sp=Math.hypot(b.vx,b.vy);
+      if(sp>1.0){b.vx/=sp;b.vy/=sp;}b.vx*=.97;b.vy*=.97;
+      b.x+=b.vx;b.y+=b.vy;
+      const pad=b.sigma;
+      if(b.x<pad){b.x=pad;b.vx=Math.abs(b.vx)*.6;}
+      if(b.x>GW-pad){b.x=GW-pad;b.vx=-Math.abs(b.vx)*.6;}
+      if(b.y<pad){b.y=pad;b.vy=Math.abs(b.vy)*.6;}
+      if(b.y>GH-pad){b.y=GH-pad;b.vy=-Math.abs(b.vy)*.6;}
+      b.E-=mu*.15;
+      if(b.E<=0){rem.push(i);totalAge+=b.age;totalDied++;continue;}
+      if(b.E>E0*repMul&&beings.length+add.length<SER_MAX){
+        b.E=E0*.6;
+        const c=new Ser(b.x+(Math.random()-.5)*b.sigma*2,b.y+(Math.random()-.5)*b.sigma*2,b.type,E0);
+        c.E=E0*.4;c.sigma=b.sigma*(.85+Math.random()*.3);add.push(c);totalBorn++;
+      }
+    }
+    for(let i=rem.length-1;i>=0;i--) beings.splice(rem[i],1);
+    for(const c of add) beings.push(c);
+    for(let n=0;n<pBirth;n++){
+      if(Math.random()>.02)continue;
+      if(beings.length>=SER_MAX)break;
+      beings.push(new Ser(null,null,null,E0));totalBorn++;
+    }
+
+    // Acumular slice según vel. de tiempo
+    sliceAcc+=tSpeed;
+    if(sliceAcc>=1.0){
+      writeSlice(T2,beings);
+      sliceAcc-=1.0;
+    }
+
+    document.getElementById('cnt').textContent=beings.length;
+    document.getElementById('born').textContent=totalBorn;
+    document.getElementById('tSlice').textContent=sliceCount+'/'+GT;
+    document.getElementById('vida').textContent=totalDied>0?Math.round(totalAge/totalDied)+'f':'—';
+  }
+
+  // render
+  gl.viewport(0,0,canvas.width,canvas.height);
+  gl.uniform2f(uRes,canvas.width,canvas.height);
+  gl.uniformMatrix3fv(uRot,false,makeRot3(azimuth,elevation));
+  gl.uniform1f(uTFrac, sliceCount>=GT ? 1.0 : sliceCount/GT);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+
+  requestAnimationFrame(loop);
+}
+
+reset();
+requestAnimationFrame(loop);
+
+// ── Controles ─────────────────────────────────────────────────────────────────
+document.getElementById('al').oninput=function(){document.getElementById('alo').textContent=(+this.value).toFixed(2);};
+document.getElementById('lm').oninput=function(){document.getElementById('lmo').textContent=(+this.value).toFixed(3);};
+document.getElementById('me').oninput=function(){document.getElementById('meo').textContent=(+this.value).toFixed(1);};
+document.getElementById('pb').oninput=function(){document.getElementById('pbo').textContent=this.value;};
+document.getElementById('e0').oninput=function(){document.getElementById('e0o').textContent=this.value;};
+document.getElementById('re').oninput=function(){document.getElementById('reo').textContent=(+this.value).toFixed(1)+'×E₀';};
+document.getElementById('ts').oninput=function(){document.getElementById('tso').textContent=(+this.value).toFixed(1);};
+document.getElementById('reset').onclick=reset;
+</script>
+</body>
+</html>

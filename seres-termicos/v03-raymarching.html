@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seres Térmicos — v0.3 Ray Marching</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#020307;color:#ddd;
+  font-family:system-ui,'Segoe UI',sans-serif}
+canvas{display:block;width:100vw;height:100vh}
+.panel{position:fixed;left:18px;bottom:18px;width:min(340px,calc(100vw - 36px));
+  padding:14px 16px;background:rgba(5,7,12,.82);border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;backdrop-filter:blur(10px);font-size:12px;line-height:1.5}
+.panel h1{font-size:15px;margin:0 0 3px;letter-spacing:.03em}
+.sub{color:#778;margin-bottom:10px;font-size:11px}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0}
+.row span{width:80px;color:#99a}
+.row output{width:32px;text-align:right;color:#eee;font-variant-numeric:tabular-nums}
+input{flex:1;accent-color:#d97}
+button{margin-top:8px;background:#0f1219;color:#ccc;border:1px solid #2e3340;
+  border-radius:6px;padding:5px 9px;cursor:pointer;font-size:11px}
+#fps{position:fixed;right:16px;top:14px;color:#555;font:11px monospace}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="panel">
+  <h1>SERES TÉRMICOS · v0.3</h1>
+  <div class="sub">Ray marching volumétrico · campo T(x,y,z,t)</div>
+  <div class="row"><span>Seres</span>
+    <input id="ns" type="range" min="1" max="8" value="3" step="1">
+    <output id="nso">3</output></div>
+  <div class="row"><span>Difusión α</span>
+    <input id="al" type="range" min="1" max="100" value="30">
+    <output id="alo">0.30</output></div>
+  <div class="row"><span>Densidad</span>
+    <input id="dn" type="range" min="1" max="100" value="55">
+    <output id="dno">0.55</output></div>
+  <div class="row"><span>Pasos rayo</span>
+    <input id="st" type="range" min="20" max="120" value="64" step="4">
+    <output id="sto">64</output></div>
+  <button id="reset">reiniciar seres</button>
+</div>
+<div id="fps"></div>
+<script>
+'use strict';
+
+const canvas = document.getElementById('c');
+const gl = canvas.getContext('webgl2', {alpha:false, antialias:false});
+if (!gl) { document.body.innerHTML='<h2 style="color:#f55;margin:2em">WebGL2 no disponible</h2>'; throw 0; }
+
+// ── Parámetros ──────────────────────────────────────────────────────────────
+const N = 64;            // resolución del volumen (64³ = 256k celdas)
+const MAX_BEINGS = 8;
+
+// ── Seres térmicos (CPU) ────────────────────────────────────────────────────
+// Cada ser: posición [0,1]³, velocidad, temperatura, fase, sigma
+let beings = [];
+
+function makeBeing(hot) {
+  return {
+    x: .2 + Math.random()*.6,
+    y: .2 + Math.random()*.6,
+    z: .2 + Math.random()*.6,
+    vx: (Math.random()-.5)*.003,
+    vy: (Math.random()-.5)*.003,
+    vz: (Math.random()-.5)*.003,
+    T:  hot ? .75 + Math.random()*.25 : -(0.55 + Math.random()*.35),
+    sigma: .07 + Math.random()*.06,
+    phase: Math.random()*Math.PI*2,
+    freq: .008 + Math.random()*.012,
+  };
+}
+
+function resetBeings() {
+  beings = [];
+  const n = +document.getElementById('ns').value;
+  for (let i = 0; i < n; i++) beings.push(makeBeing(i % 2 === 0));
+}
+resetBeings();
+
+// ── Campo térmico CPU (campo 3D, ecuación del calor simplificada) ───────────
+// Para mantener 60 fps en JS usamos N=64 y una versión vectorizada simple.
+// La ecuación completa se haría en GPU; aquí es una aproximación suficiente
+// para alimentar la textura 3D cada frame.
+
+const field    = new Float32Array(N * N * N);
+const fieldTmp = new Float32Array(N * N * N);
+
+function idx(x, y, z) { return x + N * (y + N * z); }
+
+// Agregar fuente gaussiana de un ser
+function addGaussian(bx, by, bz, amp, sigma) {
+  const r = Math.ceil(sigma * N * 2.5) | 0;
+  const cx = (bx * N) | 0, cy = (by * N) | 0, cz = (bz * N) | 0;
+  const s2 = 2 * (sigma * N) * (sigma * N);
+  for (let z = Math.max(0,cz-r); z < Math.min(N,cz+r+1); z++)
+    for (let y = Math.max(0,cy-r); y < Math.min(N,cy+r+1); y++)
+      for (let x = Math.max(0,cx-r); x < Math.min(N,cx+r+1); x++) {
+        const d2 = (x-cx)*(x-cx)+(y-cy)*(y-cy)+(z-cz)*(z-cz);
+        field[idx(x,y,z)] += amp * Math.exp(-d2 / s2);
+      }
+}
+
+// Un paso de difusión (esquema explícito, Δt elegido por estabilidad)
+function diffuseStep(alpha, damp) {
+  // α·Δt/(Δx²) con Δx=1/N, Δt implícito, coef = alpha * 0.1
+  const k = alpha * 0.12;
+  for (let z = 1; z < N-1; z++)
+    for (let y = 1; y < N-1; y++)
+      for (let x = 1; x < N-1; x++) {
+        const c = idx(x,y,z);
+        const lap =
+          field[idx(x+1,y,z)] + field[idx(x-1,y,z)] +
+          field[idx(x,y+1,z)] + field[idx(x,y-1,z)] +
+          field[idx(x,y,z+1)] + field[idx(x,y,z-1)] - 6*field[c];
+        fieldTmp[c] = (field[c] + k * lap) * damp;
+      }
+  // Neumann (borde)
+  for (let z = 0; z < N; z++) for (let y = 0; y < N; y++) {
+    fieldTmp[idx(0,y,z)]   = fieldTmp[idx(1,y,z)];
+    fieldTmp[idx(N-1,y,z)] = fieldTmp[idx(N-2,y,z)];
+  }
+  for (let z = 0; z < N; z++) for (let x = 0; x < N; x++) {
+    fieldTmp[idx(x,0,z)]   = fieldTmp[idx(x,1,z)];
+    fieldTmp[idx(x,N-1,z)] = fieldTmp[idx(x,N-2,z)];
+  }
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    fieldTmp[idx(x,y,0)]   = fieldTmp[idx(x,y,1)];
+    fieldTmp[idx(x,y,N-1)] = fieldTmp[idx(x,y,N-2)];
+  }
+  field.set(fieldTmp);
+}
+
+// ── WebGL: textura 3D + shaders ────────────────────────────────────────────
+const VS = `#version 300 es
+in vec2 pos; out vec2 uv;
+void main(){ uv=pos*.5+.5; gl_Position=vec4(pos,0,1); }`;
+
+// Ray marching volumétrico sobre T(x,y,z)
+// Integra la emisión a lo largo del rayo con front-to-back compositing
+const FS = `#version 300 es
+precision highp float;
+precision highp sampler3D;
+
+uniform sampler3D volume;
+uniform float time;
+uniform float density;
+uniform int steps;
+in vec2 uv;
+out vec4 color;
+
+// Colormap divergente: frío=azul/violeta, cero=negro, caliente=naranja/blanco
+vec3 thermalColor(float T) {
+  if (T >= 0.0) {
+    float v = clamp(T, 0.0, 1.0);
+    if (v < .25) return mix(vec3(.01,.005,.10),  vec3(.5,.04,.01), v*4.);
+    if (v < .55) return mix(vec3(.5,.04,.01),    vec3(1.,.35,.02), (v-.25)*3.33);
+    if (v < .80) return mix(vec3(1.,.35,.02),    vec3(1.,.85,.1),  (v-.55)*4.);
+                 return mix(vec3(1.,.85,.1),      vec3(1.,.97,.9),  (v-.80)*5.);
+  } else {
+    float v = clamp(-T, 0.0, 1.0);
+    if (v < .25) return mix(vec3(.01,.005,.10),  vec3(.0,.02,.55), v*4.);
+    if (v < .55) return mix(vec3(.0,.02,.55),    vec3(.0,.45,.95), (v-.25)*3.33);
+    if (v < .80) return mix(vec3(.0,.45,.95),    vec3(.1,.90,1.0), (v-.55)*4.);
+                 return mix(vec3(.1,.90,1.0),     vec3(.8,.98,1.0), (v-.80)*5.);
+  }
+}
+
+void main(){
+  // Rayo: proyección ortogonal rotante
+  vec2 p = uv*2.0-1.0;
+  float a = time*.18;
+  float ca=cos(a), sa=sin(a);
+  // Dirección del rayo (inclinada para ver el volumen en perspectiva)
+  vec3 rd = normalize(vec3(0.0, 0.0, -1.0));
+  // Origen: girar cámara alrededor del volumen
+  vec3 ro = vec3(ca*p.x - sa*.3, p.y, sa*p.x + ca*.3) * 1.0 + vec3(.5,.5,.5);
+  // Corregir origen para entrar al cubo [0,1]³ desde afuera
+  ro.z = 1.8;
+
+  // Rotación simple alrededor del eje Y para girar la "cámara"
+  float angle = time * .12;
+  float c2=cos(angle), s2=sin(angle);
+  // Dirección del rayo girada
+  vec3 dir = normalize(vec3(p.x, p.y, -2.0));
+  vec3 orig = vec3(.5,.5,2.2);
+  // Aplicar rotación al rayo
+  float rx = dir.x*c2 + dir.z*s2;
+  float rz = -dir.x*s2 + dir.z*c2;
+  dir = normalize(vec3(rx, dir.y, rz));
+
+  // Intersección con cubo [0,1]³
+  vec3 tmin3 = (vec3(0.0)-orig)/dir;
+  vec3 tmax3 = (vec3(1.0)-orig)/dir;
+  vec3 t1 = min(tmin3, tmax3);
+  vec3 t2 = max(tmin3, tmax3);
+  float tenter = max(max(t1.x, t1.y), t1.z);
+  float texit  = min(min(t2.x, t2.y), t2.z);
+
+  if (tenter >= texit || texit < 0.0) { color=vec4(0.0,0.0,0.02,1.0); return; }
+
+  float tstart = max(tenter, 0.0);
+  float tstep  = (texit - tstart) / float(steps);
+
+  // Front-to-back compositing
+  vec4 acc = vec4(0.0);
+  for (int i = 0; i < 128; i++) {
+    if (i >= steps || acc.a > .98) break;
+    float t = tstart + (float(i)+.5)*tstep;
+    vec3 pos = orig + dir*t;
+    float T = texture(volume, pos).r * 2.0 - 1.0; // RGBA8 [0,1] → [-1,1]
+    float absT = abs(T);
+    if (absT < .02) continue;               // vacío térmico
+    vec3 c = thermalColor(T);
+    float sigma = absT * density * tstep * 3.5;
+    float alpha = 1.0 - exp(-sigma);
+    acc.rgb += (1.0 - acc.a) * alpha * c * (0.8 + .7*absT);
+    acc.a   += (1.0 - acc.a) * alpha;
+  }
+
+  // Fondo cósmico (frío absoluto)
+  acc.rgb += (1.0 - acc.a) * vec3(.0,.005,.015);
+  color = vec4(acc.rgb, 1.0);
+}`;
+
+function compileShader(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, VS));
+gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, FS));
+gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+
+const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+const posLoc = gl.getAttribLocation(prog, 'pos');
+gl.enableVertexAttribArray(posLoc);
+gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+const tex = gl.createTexture();
+gl.activeTexture(gl.TEXTURE0);
+gl.bindTexture(gl.TEXTURE_3D, tex);
+gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
+gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+// Inicializar vacío — formato RGBA8 (universalmente compatible)
+gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA, N,N,N, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(N*N*N*4).fill(128));
+
+// ── Controles UI ────────────────────────────────────────────────────────────
+document.getElementById('ns').oninput = function(){ document.getElementById('nso').textContent=this.value; resetBeings(); };
+document.getElementById('al').oninput = function(){ document.getElementById('alo').textContent=(this.value/100).toFixed(2); };
+document.getElementById('dn').oninput = function(){ document.getElementById('dno').textContent=(this.value/100).toFixed(2); };
+document.getElementById('st').oninput = function(){ document.getElementById('sto').textContent=this.value; };
+document.getElementById('reset').onclick = resetBeings;
+
+// ── Loop ────────────────────────────────────────────────────────────────────
+function resize() {
+  const d = Math.min(devicePixelRatio||1, 2);
+  canvas.width = innerWidth*d; canvas.height = innerHeight*d;
+  gl.viewport(0,0,canvas.width,canvas.height);
+}
+addEventListener('resize', resize); resize();
+
+const T_MAX = 1.0;
+let frameCount = 0, fpsTime = performance.now(), lastTime = performance.now();
+
+function loop(now) {
+  const dt = Math.min((now - lastTime)/16.67, 2); lastTime = now;
+  const alpha  = +document.getElementById('al').value / 100;
+  const damp   = 0.994;
+
+  // ── CPU: mover seres + inyectar calor/frío en el campo ──
+  field.fill(0);   // reiniciar campo (método simple: rebuild cada frame)
+  for (const b of beings) {
+    b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
+    if (b.x < .1 || b.x > .9) { b.vx *= -1; b.vy += (Math.random()-.5)*.001; }
+    if (b.y < .1 || b.y > .9) { b.vy *= -1; b.vx += (Math.random()-.5)*.001; }
+    if (b.z < .1 || b.z > .9) { b.vz *= -1; b.vy += (Math.random()-.5)*.001; }
+    const pulse = .75 + .25 * Math.sin(now*.001*b.freq*60 + b.phase);
+    addGaussian(b.x, b.y, b.z, b.T * pulse, b.sigma);
+  }
+
+  // Difundir (1 paso por frame para mantener velocidad)
+  diffuseStep(alpha, damp);
+
+  // ── GPU: convertir campo float [-1,1] a RGBA8 y subir ──
+  const fb = new Uint8Array(N*N*N*4);
+  for (let i = 0; i < N*N*N; i++) {
+    const v = Math.max(0, Math.min(255, (field[i] + 1) * 127.5)) | 0;
+    fb[i*4]=v; fb[i*4+1]=0; fb[i*4+2]=0; fb[i*4+3]=255;
+  }
+  gl.bindTexture(gl.TEXTURE_3D, tex);
+  gl.texSubImage3D(gl.TEXTURE_3D, 0, 0,0,0, N,N,N, gl.RGBA, gl.UNSIGNED_BYTE, fb);
+
+  // ── Render: ray marching en shader ──
+  gl.clearColor(.01,.01,.02,1); gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.useProgram(prog); gl.bindVertexArray(vao);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_3D, tex);
+  gl.uniform1i( gl.getUniformLocation(prog,'volume'), 0);
+  gl.uniform1f( gl.getUniformLocation(prog,'time'),   now * .001);
+  gl.uniform1f( gl.getUniformLocation(prog,'density'),+document.getElementById('dn').value/100 * 80);
+  gl.uniform1i( gl.getUniformLocation(prog,'steps'),  +document.getElementById('st').value);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  // FPS
+  frameCount++;
+  if (now - fpsTime > 1000) {
+    document.getElementById('fps').textContent =
+      `${Math.round(frameCount*1000/(now-fpsTime))} fps · N=${N}³`;
+    frameCount = 0; fpsTime = now;
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

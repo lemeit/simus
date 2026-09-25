@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seres Térmicos — v0.6 Ciclo de vida</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ── tokens lemeit dark ── */
+:root{
+  --bg:       #0f0d0a;
+  --surface:  #1A1612;
+  --surface2: #221E18;
+  --border:   #3D3028;
+  --text:     #F2ECE4;
+  --dim:      #C9BEB2;
+  --accent:   #D9691F;   /* naranja óxido */
+  --good:     #8FB56B;   /* verde nac. */
+  --bad:      #D9736F;   /* rojo muerte */
+  --teal:     #009688;   /* frío / ciano */
+  --amber:    #D9A441;   /* moderado */
+  --mono:     'JetBrains Mono', ui-monospace, monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);
+  color:var(--text);font-family:var(--mono)}
+#c{display:block;width:100vw;height:100vh;image-rendering:pixelated;
+   image-rendering:crisp-edges}
+
+/* ── panel izquierdo: controles ── */
+.ctrl{position:fixed;left:14px;bottom:14px;width:238px;
+  padding:11px 12px;background:rgba(26,22,18,.96);
+  border:1px solid var(--border);border-radius:10px;
+  backdrop-filter:blur(12px);font-size:11px;line-height:1.5;
+  overflow:hidden}
+.ctrl h1{font-size:12px;margin:0 0 1px;letter-spacing:.06em;
+  color:var(--accent);font-weight:700}
+.sub{color:#5a4a3a;margin-bottom:6px;font-size:9px;line-height:1.4}
+.row{display:flex;align-items:center;gap:5px;margin:2px 0}
+.row span{width:80px;color:#7a6555;font-size:10px;flex-shrink:0}
+.row output{width:44px;text-align:right;color:var(--dim);font-size:9px;
+            font-variant-numeric:tabular-nums;flex-shrink:0;
+            white-space:nowrap;overflow:hidden;font-family:'JetBrains Mono',monospace}
+input[type=range]{flex:1;min-width:0;accent-color:var(--accent);height:3px;cursor:pointer;
+  -webkit-appearance:none;appearance:none;background:var(--border);border-radius:2px}
+input[type=range]::-webkit-slider-thumb{width:10px;height:10px;-webkit-appearance:none;
+  background:var(--accent);border-radius:50%;margin-top:-3.5px}
+input[type=range]::-moz-range-thumb{width:10px;height:10px;background:var(--accent);
+  border:none;border-radius:50%}
+.btn{margin-top:5px;background:var(--surface2);color:var(--dim);
+  border:1px solid var(--border);border-radius:5px;
+  padding:4px 8px;cursor:pointer;font-size:10px;width:100%;
+  font-family:'JetBrains Mono',monospace}
+.btn:hover{background:var(--border);color:var(--text)}
+
+/* ── métricas inline — tabla terminal ── */
+.stats{margin-top:7px;padding-top:7px;border-top:1px solid var(--border)}
+.statrow{display:flex;justify-content:space-between;align-items:baseline;
+  padding:1px 0;font-size:10px;line-height:1.4}
+.statrow .sl{color:#5a4a3a;font-family:'JetBrains Mono',monospace}
+.statrow .sv{font-family:'JetBrains Mono',monospace;
+  color:var(--dim);text-align:right;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+.sv-hot{color:var(--accent)!important}
+.sv-cld{color:var(--teal)!important}
+.sv-life{color:var(--amber)!important}
+
+/* ── panel derecho: gráficas ── */
+.charts{position:fixed;right:14px;top:14px;width:min(260px,calc(100vw - 260px));
+  display:flex;flex-direction:column;gap:6px}
+.chart-box{background:rgba(26,22,18,.94);border:1px solid var(--border);
+  border-radius:9px;padding:8px 10px;backdrop-filter:blur(12px)}
+.chart-box .title{font-size:9px;color:#5a4a3a;margin-bottom:4px;
+  display:flex;justify-content:space-between;align-items:baseline}
+.chart-box .title b{color:var(--dim);font-weight:500}
+.chart-box .title span{font-size:8.5px;color:#4a3a2a}
+canvas.graph{display:block;width:100%;border-radius:4px;background:var(--surface)}
+
+/* ── fps / hint ── */
+#fps{position:fixed;right:14px;bottom:10px;color:#2a1e14;font-size:9px}
+#hint{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;
+  color:#2a1e14;font-size:9px;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<!-- controles -->
+<div class="ctrl">
+  <h1>SERES TÉRMICOS · v0.6</h1>
+  <div class="sub">"calores y fríos articulados" — Borges</div>
+
+  <div class="row"><span>Difusión α</span>
+    <input id="al" type="range" min="0.05" max="0.40" step="0.01" value="0.18">
+    <output id="alo">0.18</output></div>
+  <div class="row"><span>Vacío λ</span>
+    <input id="lm" type="range" min="0.001" max="0.020" step="0.001" value="0.005">
+    <output id="lmo">0.005</output></div>
+  <div class="row"><span>Metabolismo μ</span>
+    <input id="me" type="range" min="0.1" max="5.0" step="0.1" value="0.8">
+    <output id="meo">0.8</output></div>
+  <div class="row"><span>Nac./frame</span>
+    <input id="pb" type="range" min="0" max="10" step="1" value="3">
+    <output id="pbo">3</output></div>
+  <div class="row"><span>Energía E₀</span>
+    <input id="e0" type="range" min="50" max="500" step="10" value="200">
+    <output id="e0o">200</output></div>
+  <div class="row"><span>Reproducción</span>
+    <input id="re" type="range" min="1.2" max="4.0" step="0.1" value="2.0">
+    <output id="reo">2.0×E₀</output></div>
+
+  <button class="btn" id="reset">reiniciar</button>
+
+  <div class="stats">
+    <div class="statrow"><span class="sl">total</span><span class="sv" id="cnt">0</span></div>
+    <div class="statrow"><span class="sl">calientes</span><span class="sv sv-hot" id="hot">0</span></div>
+    <div class="statrow"><span class="sl">fríos</span><span class="sv sv-cld" id="cold">0</span></div>
+    <div class="statrow"><span class="sl">vida media</span><span class="sv sv-life" id="vida">—</span></div>
+  </div>
+</div>
+
+<!-- gráficas -->
+<div class="charts">
+
+  <div class="chart-box">
+    <div class="title">
+      <b>Población N(t)</b>
+      <span id="lbl-n">— seres</span>
+    </div>
+    <canvas class="graph" id="g-pop" height="100"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <div class="title">
+      <b>Tasas</b>
+      <span><span style="color:#8FB56B">nac.</span> · <span style="color:#D9736F">muerte</span></span>
+    </div>
+    <canvas class="graph" id="g-rate" height="100"></canvas>
+  </div>
+
+  <div class="chart-box">
+    <div class="title">
+      <b>Distribución de energía</b>
+      <span id="lbl-e">E₀=200</span>
+    </div>
+    <canvas class="graph" id="g-energy" height="100"></canvas>
+  </div>
+
+</div>
+
+<div id="fps"></div>
+<div id="hint">clic → nuevo ser</div>
+
+<script>
+'use strict';
+
+// ── Utilidad: interpolar colores hex ─────────────────────────────────────────
+function lerpHex(a,b,t){
+  const p=x=>parseInt(x,16);
+  const r=c=>c.replace('#','');
+  const ah=r(a),bh=r(b);
+  const ri=p(ah.slice(0,2)),gi=p(ah.slice(2,4)),bi2=p(ah.slice(4,6));
+  const rf=p(bh.slice(0,2)),gf=p(bh.slice(2,4)),bf=p(bh.slice(4,6));
+  const hex=v=>Math.round(v).toString(16).padStart(2,'0');
+  return`#${hex(ri+(rf-ri)*t)}${hex(gi+(gf-gi)*t)}${hex(bi2+(bf-bi2)*t)}`;
+}
+
+// ── Campo térmico ─────────────────────────────────────────────────────────────
+const GW=280, GH=200, N=GW*GH;
+let T=new Float32Array(N), Tnxt=new Float32Array(N);
+
+// ── Canvas principal ──────────────────────────────────────────────────────────
+const canvas=document.getElementById('c');
+canvas.width=GW; canvas.height=GH;
+const ctx=canvas.getContext('2d');
+const img=ctx.createImageData(GW,GH);
+const px=img.data;
+
+// ── Gráficas ──────────────────────────────────────────────────────────────────
+function initGraph(id) {
+  const el=document.getElementById(id);
+  // resolución interna: doble de resolución para nitidez
+  el.width=460;
+  // altura interna = doble del atributo HTML height
+  el.height = (parseInt(el.getAttribute('height'),10)||100) * 2;
+  return el;
+}
+const gPop    = initGraph('g-pop');
+const gRate   = initGraph('g-rate');
+const gEnergy = initGraph('g-energy');
+const ctxPop    = gPop.getContext('2d');
+const ctxRate   = gRate.getContext('2d');
+const ctxEnergy = gEnergy.getContext('2d');
+
+// ── Historial (buffer circular, 400 muestras) ─────────────────────────────────
+const HIST=400;
+const hN    = new Float32Array(HIST);
+const hHot  = new Float32Array(HIST);
+const hCold = new Float32Array(HIST);
+const hBorn = new Float32Array(HIST);  // nac. por frame
+const hDied = new Float32Array(HIST);  // muertes por frame
+let hHead=0, hCount=0;
+
+// ── Parámetros ────────────────────────────────────────────────────────────────
+const T_MAX=120, A_SER=80, SER_MAX=60;
+
+// ── Ser ───────────────────────────────────────────────────────────────────────
+class Ser {
+  constructor(x,y,type,E0) {
+    this.x    = x  ?? (0.1+Math.random()*.8)*GW;
+    this.y    = y  ?? (0.1+Math.random()*.8)*GH;
+    this.type = type ?? (Math.random()<.5?1:-1);
+    this.E    = E0*(.5+Math.random()*.5);
+    this.E0   = E0;
+    this.sigma= 7+Math.random()*5;
+    this.vx   = (Math.random()-.5)*.4;
+    this.vy   = (Math.random()-.5)*.4;
+    this.phase= Math.random()*Math.PI*2;
+    this.freq = .010+Math.random()*.012;
+    this.age  = 0;
+  }
+}
+let beings=[];
+let totalAge=0, totalDied=0;
+
+function reset() {
+  T.fill(0); Tnxt.fill(0); beings=[];
+  hN.fill(0); hHot.fill(0); hCold.fill(0);
+  hBorn.fill(0); hDied.fill(0);
+  hHead=hCount=0; totalAge=totalDied=0;
+  const E0=+document.getElementById('e0').value;
+  for (let i=0;i<5+Math.random()*4|0;i++) beings.push(new Ser(null,null,null,E0));
+}
+reset();
+
+// ── Física ────────────────────────────────────────────────────────────────────
+function addGauss(bx,by,amp,sigma) {
+  const r=Math.ceil(sigma*2.8)|0, cx=bx|0, cy=by|0;
+  const inv=1/(2*sigma*sigma);
+  for (let j=Math.max(1,cy-r);j<Math.min(GH-1,cy+r+1);j++)
+    for (let i=Math.max(1,cx-r);i<Math.min(GW-1,cx+r+1);i++) {
+      T[j*GW+i]+=amp*Math.exp(-((i-bx)**2+(j-by)**2)*inv);
+    }
+}
+
+function diffuse(alpha,lambda) {
+  const k=alpha*.12;
+  for (let j=1;j<GH-1;j++)
+    for (let i=1;i<GW-1;i++) {
+      const c=j*GW+i;
+      Tnxt[c]=T[c]+k*(T[(j-1)*GW+i]+T[(j+1)*GW+i]+T[j*GW+i-1]+T[j*GW+i+1]-4*T[c])-lambda*T[c];
+    }
+  for (let i=0;i<GW;i++){Tnxt[i]=Tnxt[GW+i];Tnxt[(GH-1)*GW+i]=Tnxt[(GH-2)*GW+i];}
+  for (let j=0;j<GH;j++){Tnxt[j*GW]=Tnxt[j*GW+1];Tnxt[j*GW+GW-1]=Tnxt[j*GW+GW-2];}
+  const tmp=T;T=Tnxt;Tnxt=tmp;
+}
+
+// ── Colormap ──────────────────────────────────────────────────────────────────
+function rgb(v) {
+  let r,g,b;
+  if(v>=0){
+    if(v<.20){const t=v/.20;r=t*150;g=0;b=0;}
+    else if(v<.50){const t=(v-.20)/.30;r=150+t*80;g=t*90;b=0;}
+    else if(v<.78){const t=(v-.50)/.28;r=230+t*25;g=90+t*140;b=t*40;}
+    else{const t=(v-.78)/.22;r=255;g=230+t*25;b=40+t*215;}
+  }else{
+    const w=-v;
+    if(w<.20){const t=w/.20;r=0;g=0;b=t*160;}
+    else if(w<.50){const t=(w-.20)/.30;r=0;g=t*140;b=160+t*70;}
+    else if(w<.78){const t=(w-.50)/.28;r=t*20;g=140+t*90;b=230+t*15;}
+    else{const t=(w-.78)/.22;r=20+t*175;g=230+t*25;b=245+t*10;}
+  }
+  return[r|0,g|0,b|0];
+}
+
+// ── Render campo (sin núcleos) ────────────────────────────────────────────────
+function renderField() {
+  for(let i=0;i<N;i++){
+    const v=Math.max(-1,Math.min(1,T[i]/T_MAX));
+    const[r,g,b]=rgb(v),p=i<<2;
+    px[p]=r;px[p+1]=g;px[p+2]=b;px[p+3]=255;
+  }
+  ctx.putImageData(img,0,0);
+}
+
+// ── helpers de gráficas ───────────────────────────────────────────────────────
+// colores lemeit para las gráficas
+const LM = {
+  bg:      '#1A1612',
+  grid:    '#3D3028',
+  gridLbl: '#5a4a3a',
+  text:    '#C9BEB2',
+  accent:  '#D9691F',  // calientes
+  teal:    '#009688',  // fríos
+  good:    '#8FB56B',  // nacimientos
+  bad:     '#D9736F',  // muertes
+  amber:   '#D9A441',
+};
+
+function clearGraph(c, cw, ch) {
+  c.fillStyle=LM.bg; c.fillRect(0,0,cw,ch);
+}
+
+function gridLine(c, y, cw, label) {
+  c.strokeStyle=LM.grid; c.lineWidth=1;
+  c.setLineDash([2,4]);
+  c.beginPath(); c.moveTo(0,y); c.lineTo(cw,y); c.stroke();
+  c.setLineDash([]);
+  if(label!==undefined){
+    c.fillStyle=LM.gridLbl; c.font='10px monospace';
+    c.fillText(label,3,y-2);
+  }
+}
+
+// Catmull-Rom spline suave a través de los puntos
+function smoothLine(c, xs, ys, n){
+  if(n<2) return;
+  c.moveTo(xs[0],ys[0]);
+  if(n===2){ c.lineTo(xs[1],ys[1]); return; }
+  for(let i=0;i<n-1;i++){
+    const p0=Math.max(0,i-1), p1=i, p2=Math.min(n-1,i+1), p3=Math.min(n-1,i+2);
+    const cp1x=xs[p1]+(xs[p2]-xs[p0])/6;
+    const cp1y=ys[p1]+(ys[p2]-ys[p0])/6;
+    const cp2x=xs[p2]-(xs[p3]-xs[p1])/6;
+    const cp2y=ys[p2]-(ys[p3]-ys[p1])/6;
+    c.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,xs[p2],ys[p2]);
+  }
+}
+
+function histLine(c, hist, head, count, cw, ch, color, lw, fill) {
+  const len=Math.min(count,HIST);
+  if(len<2) return;
+  // Construir arrays de coordenadas
+  const xs=new Float32Array(len), ys=new Float32Array(len);
+  for(let i=0;i<len;i++){
+    const idx=(head-len+i+HIST)%HIST;
+    xs[i]=i/(len-1)*cw; ys[i]=hist[idx];
+  }
+  c.beginPath();
+  c.strokeStyle=color; c.lineWidth=lw||1.2;
+  smoothLine(c,xs,ys,len);
+  c.stroke();
+  if(fill){
+    c.lineTo(cw,ch); c.lineTo(0,ch); c.closePath();
+    c.fillStyle=fill; c.fill();
+  }
+}
+
+// ── Gráfica 1: Población N(t) ─────────────────────────────────────────────────
+function drawPop() {
+  const cw=460, ch=gPop.height;
+  clearGraph(ctxPop,cw,ch);
+  const len=Math.min(hCount,HIST);
+  if(len<2) return;
+
+  // escala dinámica
+  let maxN=1;
+  for(let i=0;i<len;i++) maxN=Math.max(maxN,hN[(hHead-len+i+HIST)%HIST]);
+  const sc=(ch-10)/(maxN*1.2);
+
+  gridLine(ctxPop, ch-4-Math.round(maxN/2)*sc, cw, Math.round(maxN/2));
+  gridLine(ctxPop, ch-4-maxN*sc, cw, Math.round(maxN));
+
+  // puntos y escalados
+  const yHot  = i=>ch-4-hHot [(hHead-len+i+HIST)%HIST]*sc;
+  const yCold = i=>ch-4-hCold[(hHead-len+i+HIST)%HIST]*sc;
+  const yN    = i=>ch-4-hN   [(hHead-len+i+HIST)%HIST]*sc;
+
+  // construir arrays de coordenadas
+  const xs=new Float32Array(len);
+  const ysH=new Float32Array(len),ysC=new Float32Array(len),ysN=new Float32Array(len);
+  for(let i=0;i<len;i++){
+    xs[i]=i/(len-1)*cw;
+    ysH[i]=yHot(i); ysC[i]=yCold(i); ysN[i]=yN(i);
+  }
+
+  // área calientes
+  ctxPop.beginPath();
+  smoothLine(ctxPop,xs,ysH,len);
+  ctxPop.lineTo(cw,ch);ctxPop.lineTo(0,ch);ctxPop.closePath();
+  ctxPop.fillStyle='rgba(217,105,31,.22)';ctxPop.fill();
+
+  // área fríos
+  ctxPop.beginPath();
+  smoothLine(ctxPop,xs,ysC,len);
+  ctxPop.lineTo(cw,ch);ctxPop.lineTo(0,ch);ctxPop.closePath();
+  ctxPop.fillStyle='rgba(0,150,136,.22)';ctxPop.fill();
+
+  // línea calientes
+  ctxPop.beginPath();ctxPop.strokeStyle=LM.accent+'99';ctxPop.lineWidth=1.1;
+  smoothLine(ctxPop,xs,ysH,len);ctxPop.stroke();
+
+  // línea fríos
+  ctxPop.beginPath();ctxPop.strokeStyle=LM.teal+'99';ctxPop.lineWidth=1.1;
+  smoothLine(ctxPop,xs,ysC,len);ctxPop.stroke();
+
+  // línea total
+  ctxPop.beginPath();ctxPop.strokeStyle=LM.text+'cc';ctxPop.lineWidth=1.6;
+  smoothLine(ctxPop,xs,ysN,len);ctxPop.stroke();
+
+  // punto final
+  const yLast=yN(len-1);
+  ctxPop.beginPath();ctxPop.arc(cw-1,yLast,3.5,0,Math.PI*2);
+  ctxPop.fillStyle=LM.text;ctxPop.fill();
+
+  document.getElementById('lbl-n').textContent=`${beings.length} seres`;
+}
+
+// ── Gráfica 2: Tasas nacimiento / muerte ──────────────────────────────────────
+function drawRates() {
+  const cw=460, ch=gRate.height;
+  clearGraph(ctxRate,cw,ch);
+  const len=Math.min(hCount,HIST);
+  if(len<2) return;
+
+  let maxR=1;
+  for(let i=0;i<len;i++){
+    const idx=(hHead-len+i+HIST)%HIST;
+    maxR=Math.max(maxR,hBorn[idx],hDied[idx]);
+  }
+  const sc=(ch-10)/(maxR*1.3);
+  gridLine(ctxRate, ch-4-Math.round(maxR/2)*sc, cw, Math.round(maxR/2));
+
+  // construir arrays
+  const xsR=new Float32Array(len),ysDied=new Float32Array(len),ysBorn=new Float32Array(len);
+  for(let i=0;i<len;i++){
+    const idx=(hHead-len+i+HIST)%HIST;
+    xsR[i]=i/(len-1)*cw;
+    ysDied[i]=ch-4-hDied[idx]*sc;
+    ysBorn[i]=ch-4-hBorn[idx]*sc;
+  }
+
+  // área muertes (rojo lemeit)
+  ctxRate.beginPath();ctxRate.strokeStyle=LM.bad+'cc';ctxRate.lineWidth=1.4;
+  smoothLine(ctxRate,xsR,ysDied,len);ctxRate.stroke();
+
+  // área nacimientos (verde lemeit)
+  ctxRate.beginPath();ctxRate.strokeStyle=LM.good+'cc';ctxRate.lineWidth=1.4;
+  smoothLine(ctxRate,xsR,ysBorn,len);ctxRate.stroke();
+
+  // leyenda valores actuales
+  const lastB=hBorn[(hHead-1+HIST)%HIST];
+  const lastD=hDied[(hHead-1+HIST)%HIST];
+  ctxRate.font=`10px ${LM.mono||'monospace'}`;
+  ctxRate.fillStyle=LM.good+'cc';
+  ctxRate.fillText(`nac: ${lastB.toFixed(1)}`,4,ch-4);
+  ctxRate.fillStyle=LM.bad+'cc';
+  ctxRate.fillText(`mort: ${lastD.toFixed(1)}`,cw*.45,ch-4);
+}
+
+// ── Gráfica 3: Histograma de energía ─────────────────────────────────────────
+// Muestra la distribución de E_i/E0 (estado de vitalidad) de todos los seres vivos
+function drawEnergy() {
+  const cw=460, ch=gEnergy.height;
+  clearGraph(ctxEnergy,cw,ch);
+  if(beings.length===0) return;
+
+  const E0=+document.getElementById('e0').value;
+  const BINS=20;
+  const bins=new Uint16Array(BINS);
+  for(const b of beings){
+    const idx=Math.max(0,Math.min(BINS-1, (b.E/b.E0*BINS)|0));
+    bins[idx]++;
+  }
+  const maxB=Math.max(1,...bins);
+  const bw=cw/BINS;
+
+  for(let i=0;i<BINS;i++){
+    const h=(bins[i]/maxB)*(ch-10);
+    if(h<0.5) continue;
+    const frac=i/(BINS-1);
+    // lemeit: bad(rojo) → amber → good(verde)
+    let col;
+    if(frac<.5){ const t=frac*2; col=lerpHex(LM.bad,LM.amber,t); }
+    else       { const t=(frac-.5)*2; col=lerpHex(LM.amber,LM.good,t); }
+    ctxEnergy.fillStyle=col+'cc';
+    ctxEnergy.fillRect(i*bw+1, ch-5-h, bw-2, h);
+  }
+
+  // etiqueta E0
+  document.getElementById('lbl-e').textContent=`E₀=${E0}`;
+
+  // eje
+  ctxEnergy.fillStyle=LM.gridLbl;ctxEnergy.font='9px monospace';
+  ctxEnergy.fillText('morib.',2,ch-4);
+  ctxEnergy.fillText('vital',cw-30,ch-4);
+}
+
+// ── Loop principal ────────────────────────────────────────────────────────────
+let tick=0, fpsF=0, fpsT=performance.now();
+// suavizado de tasas (media móvil exponencial)
+let smBorn=0, smDied=0, smN=0, smHot=0, smCold=0;
+
+function loop(now) {
+  const alpha  = +document.getElementById('al').value;
+  const lambda = +document.getElementById('lm').value;
+  const mu     = +document.getElementById('me').value;
+  const pBirth = +document.getElementById('pb').value;
+  const E0     = +document.getElementById('e0').value;
+  const repMul = +document.getElementById('re').value;
+
+  let frameBorn=0, frameDied=0;
+
+  for(let s=0;s<2;s++){
+    tick++;
+    for(const b of beings){
+      const pulse=.70+.30*Math.sin(tick*b.freq+b.phase);
+      const amp=b.type*A_SER*(b.E/b.E0)*pulse*.10;
+      if(Math.abs(amp)>.01) addGauss(b.x,b.y,amp,b.sigma);
+    }
+    diffuse(alpha,lambda);
+
+    const rem=[],add=[];
+    for(let i=0;i<beings.length;i++){
+      const b=beings[i]; b.age++;
+      b.vx+=(Math.random()-.5)*.06; b.vy+=(Math.random()-.5)*.06;
+      const spd=Math.hypot(b.vx,b.vy);
+      if(spd>1.2){b.vx=b.vx/spd*1.2;b.vy=b.vy/spd*1.2;}
+      b.vx*=.97;b.vy*=.97;
+      b.x+=b.vx;b.y+=b.vy;
+      const pad=b.sigma;
+      if(b.x<pad){b.x=pad;b.vx=Math.abs(b.vx)*.6;}
+      if(b.x>GW-pad){b.x=GW-pad;b.vx=-Math.abs(b.vx)*.6;}
+      if(b.y<pad){b.y=pad;b.vy=Math.abs(b.vy)*.6;}
+      if(b.y>GH-pad){b.y=GH-pad;b.vy=-Math.abs(b.vy)*.6;}
+
+      // metabolismo: escala más directa para efecto visible
+      b.E -= mu * 0.15;
+
+      if(b.E<=0){rem.push(i);totalAge+=b.age;totalDied++;frameDied++;continue;}
+      if(b.E>E0*repMul && beings.length+add.length<SER_MAX){
+        b.E=E0*.6;
+        const c=new Ser(b.x+(Math.random()-.5)*b.sigma*2,
+                         b.y+(Math.random()-.5)*b.sigma*2,b.type,E0);
+        c.E=E0*.4; c.sigma=b.sigma*(.85+Math.random()*.3);
+        add.push(c); frameBorn++;
+      }
+    }
+    for(let i=rem.length-1;i>=0;i--) beings.splice(rem[i],1);
+    for(const c of add) beings.push(c);
+
+    for(let n=0;n<pBirth;n++){
+      if(Math.random()>.02) continue;
+      if(beings.length>=SER_MAX) break;
+      beings.push(new Ser(null,null,null,E0)); frameBorn++;
+    }
+  }
+
+  // suavizado exponencial — α pequeño → curvas más fluidas
+  const α=0.06;
+  const hot =beings.filter(b=>b.type>0).length;
+  const cold=beings.length-hot;
+  smBorn =α*frameBorn     +(1-α)*smBorn;
+  smDied =α*frameDied     +(1-α)*smDied;
+  smN    =α*beings.length +(1-α)*smN;
+  smHot  =α*hot           +(1-α)*smHot;
+  smCold =α*cold          +(1-α)*smCold;
+
+  hN[hHead]=smN; hHot[hHead]=smHot; hCold[hHead]=smCold;
+  hBorn[hHead]=smBorn; hDied[hHead]=smDied;
+  hHead=(hHead+1)%HIST; hCount++;
+
+  renderField();
+  drawPop();
+  drawRates();
+  drawEnergy();
+
+  // DOM
+  document.getElementById('cnt').textContent=beings.length;
+  document.getElementById('hot').textContent=hot;
+  document.getElementById('cold').textContent=cold;
+  const vm=totalDied>0?Math.round(totalAge/totalDied/2)+'f':'—';
+  document.getElementById('vida').textContent=vm;
+
+  fpsF++;
+  if(now-fpsT>1000){
+    document.getElementById('fps').textContent=Math.round(fpsF*1000/(now-fpsT))+' fps';
+    fpsF=0;fpsT=now;
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// ── Controles ─────────────────────────────────────────────────────────────────
+document.getElementById('al').oninput=function(){document.getElementById('alo').textContent=(+this.value).toFixed(2);};
+document.getElementById('lm').oninput=function(){document.getElementById('lmo').textContent=(+this.value).toFixed(3);};
+document.getElementById('me').oninput=function(){document.getElementById('meo').textContent=(+this.value).toFixed(1);};
+document.getElementById('pb').oninput=function(){document.getElementById('pbo').textContent=this.value;};
+document.getElementById('e0').oninput=function(){document.getElementById('e0o').textContent=this.value;};
+document.getElementById('re').oninput=function(){document.getElementById('reo').textContent=(+this.value).toFixed(1)+'×E₀';};
+document.getElementById('reset').onclick=reset;
+
+canvas.addEventListener('click', e=>{
+  if(beings.length>=SER_MAX) return;
+  const r=canvas.getBoundingClientRect();
+  const cx=((e.clientX-r.left)/r.width*GW)|0;
+  const cy=((e.clientY-r.top)/r.height*GH)|0;
+  const E0=+document.getElementById('e0').value;
+  beings.push(new Ser(cx,cy,null,E0));
+});
+</script>
+</body>
+</html>
