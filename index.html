@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seres Térmicos — lemeit</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f0d0a;--surface:#1A1612;--border:#3D3028;--text:#F2ECE4;
+  --dim:#C9BEB2;--accent:#D9691F;--teal:#009688;--amber:#D9A441;--good:#8FB56B}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:40px 20px}
+.container{width:100%;max-width:600px}
+h1{font-size:13px;letter-spacing:.12em;color:var(--accent);margin-bottom:4px}
+.quote{font-size:10px;color:#3a2a1a;line-height:1.6;margin-bottom:36px;max-width:480px}
+.cards{display:flex;flex-direction:column;gap:10px}
+.card{display:block;text-decoration:none;background:var(--surface);
+  border:1px solid var(--border);border-radius:10px;padding:16px 20px;
+  transition:border-color .15s,background .15s}
+.card:hover{border-color:var(--accent);background:#221e18}
+.card-header{display:flex;align-items:baseline;gap:10px;margin-bottom:5px}
+.ver{font-size:10px;color:var(--accent);letter-spacing:.06em;font-weight:700}
+.name{font-size:12px;color:var(--text);font-weight:500}
+.desc{font-size:10px;color:#5a4a3a;line-height:1.5}
+.tag{display:inline-block;font-size:8px;color:var(--dim);background:#221e18;
+  border:1px solid var(--border);border-radius:3px;padding:1px 5px;margin-top:6px;margin-right:3px}
+.footer{margin-top:36px;font-size:9px;color:#2a1e14;text-align:center}
+.footer a{color:#3a2a1a;text-decoration:none}
+.footer a:hover{color:var(--dim)}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>SERES TÉRMICOS</h1>
+  <p class="quote">"un ciego y sordo e impalpable conjunto de calores y fríos articulados" — Borges</p>
+
+  <div class="cards">
+
+    <a class="card" href="seres-termicos/v06-ciclovida.html">
+      <div class="card-header">
+        <span class="ver">v06</span>
+        <span class="name">Ciclo de vida — 2D</span>
+      </div>
+      <div class="desc">Campo térmico 2D · presupuesto energético individual · nacimiento, metabolismo, reproducción y muerte · gráficas de población y tasas en tiempo real</div>
+      <span class="tag">Canvas 2D</span><span class="tag">CPU</span><span class="tag">280×200</span>
+    </a>
+
+    <a class="card" href="seres-termicos/v07-3d.html">
+      <div class="card-header">
+        <span class="ver">v07</span>
+        <span class="name">Esfera 3D — vista del dios y del ser</span>
+      </div>
+      <div class="desc">Campo 3D confinado en una esfera · ray marching volumétrico WebGL2 · doble perspectiva: vista exterior (el creador) + PIP interior desde un ser · rotar con mouse · Tab para cambiar de ser</div>
+      <span class="tag">WebGL2</span><span class="tag">Ray marching</span><span class="tag">64×48×32</span>
+    </a>
+
+    <a class="card" href="seres-termicos/v08-espaciotiempo.html">
+      <div class="card-header">
+        <span class="ver">v08</span>
+        <span class="name">Espaciotiempo — worldtubes de Borges</span>
+      </div>
+      <div class="desc">La simulación 2D acumulada en el tiempo forma un volumen 3D · cada ser es un tubo en el espacio-tiempo · nacimiento = inicio del tubo · muerte = fin · reproducción = bifurcación · rotar con mouse · Espacio para pausar</div>
+      <span class="tag">WebGL2</span><span class="tag">4D → 3D</span><span class="tag">Worldtubes</span>
+    </a>
+
+  </div>
+
+  <p class="footer">
+    física computacional · <a href="https://profe.lemeit.ar">profe.lemeit.ar</a> ·
+    <a href="https://github.com/lemeit/simus">github.com/lemeit/simus</a>
+  </p>
+</div>
+</body>
+</html>
