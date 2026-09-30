@@ -1,3 +1,143 @@
+# Seres Térmicos — Documentación del proyecto
+
+Experimento computacional de física y literatura.
+Partida de un texto de Borges; destino: emergencia, vida y muerte en un campo de reacción-difusión.
+
+---
+
+## El texto de partida
+
+> "cada hombre, cada ser, era un organismo hecho de temperaturas cambiantes.
+> La humanidad de la época saturnina fue un ciego y sordo e impalpable
+> conjunto de calores y fríos articulados."
+>
+> — Jorge Luis Borges (con Margarita Guerrero), «Seres Térmicos»,
+> *El libro de los seres imaginarios* (FCE, 1957; ed. ampliada 1967)
+
+Borges describe una cosmología imaginaria (derivada de Rudolf Steiner) en la que los seres
+no tienen cuerpo sólido, líquido ni gaseoso. Son únicamente **formas térmicas**: distribuciones
+de calor y frío que se articulan en el espacio cósmico.
+
+La pregunta que guía este proyecto:
+
+> ¿Podemos convertir esa metáfora en un sistema dinámico computacional?
+> ¿Qué aspecto tendría un organismo cuya única realidad fuera su estado térmico?
+
+---
+
+## El límite de la física lineal
+
+El primer intento usa la **ecuación del calor**:
+
+ $$\frac{\partial T}{\partial t} = \alpha \nabla^2 T$$ 
+Esta ecuación describe cómo se difunde el calor en un medio. Es elegante y
+correcta para describir difusión, pero tiene un problema fundamental:
+**es lineal**. Todo sistema regido por ella evoluciona inevitablemente hacia
+el equilibrio térmico. Las estructuras se disuelven. No puede haber organismos,
+porque no hay nada que los mantenga lejos del equilibrio.
+
+Con fuentes externas (los "seres" como gaussianas) y acoplamiento al gradiente ∇T:
+
+ $$\vec{F}_i = -\text{type}_i \cdot k \cdot \nabla T(\vec{x}_i)$$ 
+se obtiene movimiento más interesante, pero los "seres" siguen siendo
+**objetos programados** que se mueven en un campo pasivo. No emergen.
+No se reproducen. No mueren espontáneamente.
+
+---
+
+## El salto: estructuras disipativas y no linealidad
+
+**Ilya Prigogine** (Premio Nobel de Química, 1977) demostró que los sistemas
+lejos del equilibrio termodinámico pueden **auto-organizarse**:
+mantener estructuras ordenadas consumiendo energía del entorno. Llamó a
+estas estructuras *disipativas*.
+
+Ejemplos reales: las células de Bénard (convección), el oscilador de
+Belousov-Zhabotinsky, y —en última instancia— los seres vivos.
+
+La condición necesaria es:
+
+ $$\sigma_{\text{interna}} < \dot{S}_{\text{exportada}}$$ 
+El sistema genera entropía internamente, pero la exporta al entorno
+más rápido de lo que la acumula. Mientras eso ocurra, la estructura existe.
+Cuando deja de ocurrir, se disuelve.
+
+Para modelar esto computacionalmente se necesitan tres ingredientes que
+la ecuación del calor no tiene:
+
+1. **No linealidad** — términos como $uv^2$ (autocatálisis)
+2. **Dos campos acoplados** — un activador y un inhibidor
+3. **Fuente de energía externa** — que mantenga el sistema lejos del equilibrio
+
+---
+
+## La física que sí produce vida: Gray-Scott (1984)
+
+Las ecuaciones de reacción-difusión de Gray-Scott son:
+
+ $$\frac{\partial u}{\partial t} = D_u \nabla^2 u \;-\; uv^2 \;+\; F(1-u)$$ 
+ $$\frac{\partial v}{\partial t} = D_v \nabla^2 v \;+\; uv^2 \;-\; (F+k)\,v$$ 
+### Variables
+
+| Variable | Interpretación física | Interpretación poética |
+|----------|----------------------|----------------------|
+| $u(x,y,t)$ | Concentración del sustrato (alimento) | El vacío cósmico, fuente de energía |
+| $v(x,y,t)$ | Concentración del producto (organismo) | El ser térmico |
+
+### Términos
+
+| Término | Ecuación | Significado |
+|---------|----------|-------------|
+| $D_u \nabla^2 u$ | en $\partial u/\partial t$ | El sustrato difunde en el espacio |
+| $D_v \nabla^2 v$ | en $\partial v/\partial t$ | El organismo difunde (se mueve) |
+| $-uv^2$ | en $\partial u/\partial t$ | El organismo *consume* sustrato |
+| $+uv^2$ | en $\partial v/\partial t$ | El organismo se *reproduce* usando sustrato (autocatálisis) |
+| $F(1-u)$ | en $\partial u/\partial t$ | El sustrato se *repone* desde el exterior (feed rate) |
+| $-(F+k)v$ | en $\partial v/\partial t$ | El organismo *muere* a tasa $k$ |
+
+El término clave es $uv^2$: para que $v$ se reproduzca necesita encontrar
+ $u$ (alimento). Si no hay alimento, $v$ desaparece. Este es el mecanismo
+de competencia y extinción.
+
+### Mapa de comportamientos según (F, k)
+
+Los parámetros $F$ (reposición de alimento) y $k$ (muerte) determinan
+qué tipo de organismo emerge:
+
+| F | k | Comportamiento |
+|---|---|----------------|
+| 0.035 | 0.065 | Manchas que se dividen (reproducción) |
+| 0.055 | 0.062 | Patrones coralinos, filamentos |
+| 0.025 | 0.055 | Manchas estables, pulsan |
+| 0.037 | 0.060 | Auto-replicación caótica |
+| 0.060 | 0.062 | Laberintos, ondas espirales |
+
+No hay seres "programados". Con la misma ecuación y distintos parámetros
+emergen organismos completamente diferentes.
+
+---
+
+## Ciclo de vida emergente
+
+Con Gray-Scott los seres tienen un ciclo de vida real:
+NACIMIENTO: fluctuación local de v supera un umbral
+(perturbación inicial o espontánea)
+
+CRECIMIENTO: v se expande consumiendo u en su entorno
+La velocidad depende de la disponibilidad de alimento
+
+REPRODUCCIÓN: cuando v crece demasiado, la zona central se agota
+→ la mancha se divide en dos (mitosis química)
+
+COMPETENCIA: dos manchas compiten por el u disponible entre ellas
+Si el espacio es limitado, una puede absorber o eliminar a la otra
+
+MUERTE: cuando u local cae a cero, v no puede sostenerse
+La mancha se disuelve → campo uniforme u=1, v=0
+
+EXTINCIÓN: si k es demasiado alto o F demasiado bajo,
+todas las manchas mueren y el sistema llega al equilibrio
+
 
 Esto no está programado explícitamente. Sale de $uv^2$ y de la competencia
 entre difusión y reacción.
@@ -131,6 +271,7 @@ El factor oscilatorio hace que cada ser "pulse" a su propia frecuencia (vida int
 La energía se consume simplemente por existir. No hay forma de recargarla desde afuera: cada ser tiene un tiempo de vida acotado desde el nacimiento.
 
 ### Ciclo de vida
+
 NACIMIENTO: fluctuación aleatoria en el vacío
 → nuevo ser con E_i = E_0
 
@@ -146,8 +287,6 @@ REPRODUCCIÓN: si E_i > 2·E_0 → se divide en dos seres
 MUERTE: cuando E_i ≤ 0 → el ser se elimina
 deja de inyectar calor → su cuerpo se disipa
 (el vacío absorbe el calor residual por λ·T)
-
-
 
 ### Diferencia fundamental con los enfoques anteriores
 
