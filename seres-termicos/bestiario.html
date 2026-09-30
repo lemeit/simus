@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="theme-color" content="#04050a">
+<title>Seres Térmicos II — Bestiario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --tinta:#d9d4c7;
+    --ambar:#ffa14f;
+    --linea:rgba(217,212,199,.18);
+    --tenue:rgba(217,212,199,.52);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:#04050a;overflow:hidden}
+  canvas#campo{position:fixed;inset:0;display:block;cursor:crosshair;touch-action:none}
+  #vineta{position:fixed;inset:0;pointer-events:none;z-index:1;
+    background:radial-gradient(ellipse at 50% 42%, transparent 52%, rgba(2,3,6,.62) 100%)}
+
+  @keyframes aparecer{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+  .anim{opacity:0;animation:aparecer 1.1s cubic-bezier(.2,.7,.2,1) forwards}
+
+  header{position:fixed;top:30px;left:34px;pointer-events:none;max-width:370px;z-index:2}
+  h1{margin:0;font:500 14px 'IBM Plex Mono',monospace;letter-spacing:.46em;color:var(--tinta)}
+  .regla{width:42px;height:1px;background:var(--ambar);opacity:.75;margin:12px 0 14px}
+  .epigrafe{
+    margin:0;font:italic 400 19px/1.5 'Cormorant Garamond',serif;
+    color:rgba(217,212,199,.66);transition:opacity .8s;min-height:58px;
+  }
+  .autor{
+    display:block;margin-top:9px;font:400 9.5px 'IBM Plex Mono',monospace;
+    letter-spacing:.2em;color:rgba(217,212,199,.38);font-style:normal;
+  }
+  .sub{margin-top:14px;font:400 9px 'IBM Plex Mono',monospace;letter-spacing:.24em;color:rgba(217,212,199,.32)}
+
+  #cronica{position:fixed;top:30px;right:34px;text-align:right;max-width:330px;z-index:2;pointer-events:none}
+  #cronica h2{margin:0 0 8px;font:400 8px 'IBM Plex Mono',monospace;letter-spacing:.34em;color:rgba(217,212,199,.3)}
+  #cronica div{
+    font:400 10px/1.7 'IBM Plex Mono',monospace;letter-spacing:.06em;
+    color:var(--tenue);animation:aparecer .6s;
+  }
+  #cronica div:nth-child(2){opacity:.62}
+  #cronica div:nth-child(3){opacity:.42}
+  #cronica div:nth-child(4){opacity:.27}
+  #cronica div:nth-child(5){opacity:.15}
+  #cronica div em{font-style:normal;color:var(--ambar)}
+
+  #lecturas{
+    position:fixed;right:34px;bottom:30px;text-align:right;pointer-events:none;
+    font:400 10.5px/2 'IBM Plex Mono',monospace;color:rgba(217,212,199,.46);
+    letter-spacing:.08em;z-index:2;
+  }
+  #lecturas b{color:var(--ambar);font-weight:500}
+
+  #panel{position:fixed;left:34px;bottom:30px;display:flex;flex-direction:column;gap:9px;z-index:2}
+  .fila{display:flex;align-items:center;gap:14px}
+  .fila label{font:400 9px 'IBM Plex Mono',monospace;letter-spacing:.22em;color:var(--tenue);width:118px;flex:none}
+  .fila .val{font:400 9.5px 'IBM Plex Mono',monospace;color:var(--ambar);width:46px;flex:none;text-align:right;letter-spacing:.04em}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:128px;height:16px;background:transparent;cursor:pointer}
+  input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--linea)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:7px;height:7px;margin-top:-3px;background:var(--ambar);border-radius:0}
+  input[type=range]::-moz-range-track{height:1px;background:var(--linea)}
+  input[type=range]::-moz-range-thumb{width:7px;height:7px;background:var(--ambar);border:none;border-radius:0}
+
+  .botonera{display:flex;gap:16px;margin-top:4px;flex-wrap:wrap;align-items:baseline;max-width:360px}
+  button{
+    background:none;border:none;padding:2px 0;cursor:pointer;
+    font:400 9.5px 'IBM Plex Mono',monospace;letter-spacing:.18em;
+    color:var(--tenue);transition:color .2s;
+  }
+  button:hover{color:var(--tinta)}
+  button.activo{color:var(--ambar)}
+  #bF:hover{color:#7fa7e8}
+  #bV:hover{color:var(--ambar)}
+
+  #leyenda{
+    position:fixed;left:50%;bottom:30px;transform:translateX(-50%);
+    font:400 9px 'IBM Plex Mono',monospace;letter-spacing:.1em;
+    color:rgba(217,212,199,.34);white-space:nowrap;pointer-events:none;text-align:center;z-index:2;
+  }
+  #leyenda em{font-style:normal;color:rgba(217,212,199,.6)}
+  #leyNiv{display:flex;gap:14px;justify-content:center;margin-bottom:7px}
+  #leyNiv span{display:flex;align-items:center;gap:5px}
+  #leyNiv i{width:7px;height:7px;flex:none;display:inline-block}
+
+  #ficha{
+    position:fixed;left:0;top:0;width:246px;z-index:3;
+    background:rgba(6,8,14,.92);border:1px solid var(--linea);
+    padding:14px 16px 12px;opacity:0;pointer-events:none;transition:opacity .25s;
+  }
+  #ficha.abierta{opacity:1;pointer-events:auto}
+  .f-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--linea);padding-bottom:8px;margin-bottom:9px}
+  .f-head span{font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.2em;color:var(--tinta)}
+  #fClose{font-size:13px;padding:0 2px;color:var(--tenue)}
+  #fNivel{font:500 10.5px 'IBM Plex Mono',monospace;letter-spacing:.18em;margin-bottom:6px}
+  #fCita{font:italic 400 12.5px/1.45 'Cormorant Garamond',serif;color:rgba(217,212,199,.6);margin-bottom:11px;min-height:36px}
+  #fEscala{position:relative;display:flex;gap:2px;height:7px;margin-bottom:3px}
+  #fEscala>div{flex:1;opacity:.22;transition:opacity .3s}
+  #fMarca{position:absolute;top:-3px;width:2px;height:13px;background:var(--tinta);left:50%}
+  .f-extremos{display:flex;justify-content:space-between;font:400 8px 'IBM Plex Mono',monospace;color:rgba(217,212,199,.3);margin-bottom:10px}
+  .f-datos{display:grid;grid-template-columns:auto 1fr;gap:3px 14px}
+  .f-datos label{font:400 8.5px 'IBM Plex Mono',monospace;letter-spacing:.16em;color:rgba(217,212,199,.38)}
+  .f-datos span{font:400 10px 'IBM Plex Mono',monospace;color:var(--tenue);text-align:right}
+
+  @media (max-width:860px){
+    header{left:20px;top:20px;max-width:260px}
+    .epigrafe{font-size:14px;min-height:44px}
+    #cronica,#leyenda{display:none}
+    #panel{left:20px;bottom:20px;gap:7px}
+    .fila label{width:92px}
+    input[type=range]{width:92px}
+    #lecturas{right:20px;bottom:20px;font-size:9px}
+    #ficha{width:216px}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="campo"></canvas>
+<div id="vineta"></div>
+
+<header>
+  <h1 class="anim" style="animation-delay:.1s">SERES TÉRMICOS · II</h1>
+  <div class="regla anim" style="animation-delay:.3s"></div>
+  <p class="epigrafe anim" id="epi" style="animation-delay:.45s">
+    <span id="epiTxt">«…un ciego y sordo e impalpable conjunto de calores y fríos articulados.»</span>
+    <span class="autor" id="epiAut">EL LIBRO DE LOS SERES IMAGINARIOS · BORGES–GUERRERO · 1957</span>
+  </p>
+  <p class="sub anim" style="animation-delay:.9s">ÉPOCA SATURNINA · ∂T/∂t = α∇²T · BESTIARIO</p>
+</header>
+
+<div id="cronica" class="anim" style="animation-delay:1.3s">
+  <h2>CRÓNICA</h2>
+</div>
+
+<div id="lecturas" class="anim" style="animation-delay:1.4s">
+  T̄ CAMPO <b id="rT">+0.000</b><br>
+  FLUJO |∇T| <b id="rF">0.000</b><br>
+  DESPIERTOS <b id="rS">0/0</b><br>
+  RESOLUCIÓN <b id="rC">ALTA</b><br>
+  <b id="rFps">60</b> FPS
+</div>
+
+<div id="panel" class="anim" style="animation-delay:1.1s">
+  <div class="fila"><label>DIFUSIÓN α</label><input id="sK" type="range" min="0.02" max="0.24" step="0.005" value="0.16"><span class="val" id="vK">0.16</span></div>
+  <div class="fila"><label>PERSISTENCIA</label><input id="sP" type="range" min="0.950" max="0.9995" step="0.0005" value="0.9920"><span class="val" id="vP">0.992</span></div>
+  <div class="fila"><label>SERES BASE</label><input id="sN" type="range" min="1" max="10" step="1" value="5"><span class="val" id="vN">5</span></div>
+  <div class="fila"><label>ÓRGANOS</label><input id="sM" type="range" min="4" max="14" step="1" value="9"><span class="val" id="vM">9</span></div>
+  <div class="fila"><label>LATIDO</label><input id="sL" type="range" min="0" max="2" step="0.05" value="1"><span class="val" id="vL">1.00</span></div>
+  <div class="botonera">
+    <button id="bF">INVOCAR FRÍO</button>
+    <button id="bV">INVOCAR FUEGO</button>
+  </div>
+  <div class="botonera">
+    <button id="bT" class="activo">CAMPO·T</button>
+    <button id="bG">FLUJO·∇T</button>
+    <button id="bC">CALIDAD · AUTO·ALTA</button>
+    <button id="bO">OLVIDAR</button>
+    <button id="bP">PAUSA</button>
+  </div>
+</div>
+
+<div id="leyenda" class="anim" style="animation-delay:1.8s">
+  <div id="leyNiv"></div>
+  <div><em>rozar</em> brasa · <em>pulsar</em> aliento gélido · <em>clic en un ser</em> ficha · <em>F</em> frío · <em>V</em> fuego · <em>espacio</em> pausa</div>
+</div>
+
+<div id="ficha">
+  <div class="f-head"><span id="fNum">FICHA</span><button id="fClose" title="cerrar">×</button></div>
+  <div id="fNivel">—</div>
+  <div id="fCita">—</div>
+  <div id="fEscala"></div>
+  <div class="f-extremos"><span>−1.2</span><span>+1.2</span></div>
+  <div class="f-datos">
+    <label>T MEDIA</label><span id="fTm">—</span>
+    <label>CABEZA / COLA</label><span id="fTc">—</span>
+    <label>FLUJO ∂T</label><span id="fFl">—</span>
+    <label>LATIDO</label><span id="fHz">—</span>
+    <label>FUEGO INNATO</label><span id="fSet">—</span>
+    <label>EDAD</label><span id="fEd">—</span>
+    <label>ESTADO</label><span id="fEst">—</span>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ============================================================
+   SERES TÉRMICOS II — bestiario (v2.1 final)
+   EL LIBRO DE LOS SERES IMAGINARIOS (Borges–Guerrero, 1957)
+   ------------------------------------------------------------
+   Física: ecuación del calor ∂T/∂t = α∇²T (esquema explícito,
+   estable mientras Keff < 0.25, condición CFL) + cuerpos como
+   cadenas de órganos con difusión 1D, fuego innato y
+   acoplamiento bidireccional con el campo.
+   Incluye: resolución adaptativa (AUTO), bloom, ITER adaptativo
+   y modo embebido (?embed=1).
+   ============================================================ */
+
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const lerp=(a,b,t)=>a+(b-a)*t;
+const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
+const hexA=(h,a)=>{const n=parseInt(h.slice(1),16);return `rgba(${n>>16},${(n>>8)&255},${n&255},${a})`;};
+
+const cv=document.getElementById('campo'), ctx=cv.getContext('2d');
+const off=document.createElement('canvas'), octx=off.getContext('2d');
+const bloom1=document.createElement('canvas'), b1ctx=bloom1.getContext('2d');
+const bloom2=document.createElement('canvas'), b2ctx=bloom2.getContext('2d');
+
+/* ---------- taxonomía del bestiario ---------- */
+const NIVELES=[
+  {nombre:'FORMA TÉRMICA',    lim:-0.55, color:'#1e3f86', corto:'FORMA',
+   cita:'«Este cuerpo no era visible ni siquiera tangible, ya que entonces no había en la tierra ni sólidos ni líquidos ni gases.»',
+   estado:'impalpable'},
+  {nombre:'CUERPO SATURNINO', lim:-0.15, color:'#3f6fd0', corto:'SATURNINO',
+   cita:'«Los diversos colores definían en el espacio cósmico figuras regulares e irregulares; cada ser era un organismo hecho de temperaturas cambiantes.»',
+   estado:'saturnino'},
+  {nombre:'SER ARTICULADO',   lim: 0.25, color:'#96948a', corto:'ARTICULADO',
+   cita:'«…un ciego y sordo e impalpable conjunto de calores y fríos articulados.»',
+   estado:'articulado'},
+  {nombre:'CUERPO ENCENDIDO', lim: 0.68, color:'#e6762e', corto:'ENCENDIDO',
+   cita:'«…los cuerpos de aquellos «hombres», que empezaron a brillar y a resplandecer.»',
+   estado:'resplandeciendo'},
+  {nombre:'ESPÍRITU DEL FUEGO', lim: Infinity, color:'#ffcf6e', corto:'ESPÍRITU',
+   cita:'«Espíritus del fuego o arcángeles animaron los cuerpos de aquellos «hombres».»',
+   estado:'incandescente'}
+];
+const nivelDe=t=>{for(let i=0;i<5;i++)if(t<NIVELES[i].lim)return i;return 4;};
+const ROM=['·','I','II','III','IV','V','VI','VII','VIII','IX','X',
+           'XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX'];
+const romDe=n=>ROM[n]||('S'+n);
+const MAX_SER=14, K_REST=0.5, K_DISIP=0.08;
+
+/* ---------- LUTs de color ---------- */
+function construirLUT(stops){
+  const lut=new Uint8Array(256*3);
+  for(let i=0;i<256;i++){
+    const u=i/255; let k=0;
+    while(k<stops.length-2&&u>stops[k+1][0])k++;
+    const a=stops[k],b=stops[k+1];
+    const f=clamp((u-a[0])/Math.max(1e-6,b[0]-a[0]),0,1);
+    lut[i*3]=lerp(a[1],b[1],f);lut[i*3+1]=lerp(a[2],b[2],f);lut[i*3+2]=lerp(a[3],b[3],f);
+  }
+  return lut;
+}
+const LUT_T=construirLUT([
+  [0.00,108,175,255],[0.14,38,78,150],[0.30,10,16,40],
+  [0.47,5,6,10],[0.60,40,12,8],[0.76,168,52,18],
+  [0.90,246,140,54],[1.00,255,244,222]
+]);
+const LUT_G=construirLUT([
+  [0.00,5,6,9],[0.30,58,28,16],[0.65,197,106,42],[1.00,255,233,196]
+]);
+
+/* ---------- calidad adaptativa ---------- */
+const CALIDADES=[{n:'BAJA',cells:30000},{n:'MEDIA',cells:65000},
+                 {n:'ALTA',cells:130000},{n:'ULTRA',cells:230000}];
+const MODOS=['AUTO','BAJA','MEDIA','ALTA','ULTRA'];
+let autoCal=true, calIdx=2, msEMA=16, calCool=0;
+
+/* ---------- estado ---------- */
+let W,H,dpr,CELL,gw,gh,A,B,img;
+let K=0.16, Keff=0.16, ITER=4;
+const CELL_REF=6;
+let persist=0.992, nSeres=5, nOrganos=9, latido=1;
+let modo='T', pausado=false, tSim=0, fps=60, nNacidos=0;
+let seres=[], efectos=[];
+
+/* Constantes de integración: Keff capado por CFL (≤0.24) e
+   ITER compensa repitiendo pasos, para que la difusión física
+   sea idéntica en cualquier resolución de grilla. */
+function configurarDifusion(){
+  const kReq=K*CELL_REF*CELL_REF/(CELL*CELL);
+  Keff=Math.min(0.24,kReq);
+  ITER=Math.max(2,Math.ceil(kReq/0.24));
+}
+
+/* ---------- crónica ---------- */
+const cronicaEl=document.getElementById('cronica');
+function log(msg){
+  const d=document.createElement('div');
+  d.innerHTML=`t+${String(Math.floor(tSim)).padStart(3,'0')} · <em>${msg}</em>`;
+  cronicaEl.insertBefore(d,cronicaEl.children[1]||null);
+  while(cronicaEl.children.length>6)cronicaEl.lastChild.remove();
+}
+
+/* ---------- campo térmico ---------- */
+function crearCampo(){
+  const oA=A, ogw=gw, ogh=gh;
+  CELL=Math.max(3,Math.ceil(Math.sqrt(W*H/CALIDADES[calIdx].cells)));
+  gw=Math.ceil(W/CELL); gh=Math.ceil(H/CELL);
+  A=new Float32Array(gw*gh); B=new Float32Array(gw*gh);
+  if(oA&&ogw){   // conservar la escena al cambiar de resolución
+    for(let y=0;y<gh;y++){
+      const sy=Math.min(ogh-1,(y*ogh/gh)|0);
+      for(let x=0;x<gw;x++)A[y*gw+x]=oA[sy*ogw+Math.min(ogw-1,(x*ogw/gw)|0)];
+    }
+  }
+  off.width=gw; off.height=gh;
+  img=octx.createImageData(gw,gh);
+  const bw1=Math.max(1,gw>>1), bh1=Math.max(1,gh>>1);
+  const bw2=Math.max(1,bw1>>1), bh2=Math.max(1,bh1>>1);
+  bloom1.width=bw1; bloom1.height=bh1;
+  bloom2.width=bw2; bloom2.height=bh2;
+  configurarDifusion();
+}
+function pasoDifusion(){
+  for(let it=0;it<ITER;it++){
+    for(let y=0;y<gh;y++){
+      const row=y*gw, ru=(y>0?y-1:0)*gw, rd=(y<gh-1?y+1:y)*gw;
+      for(let x=0;x<gw;x++){
+        const i=row+x,t=A[i];
+        const l=x>0?A[i-1]:0, r=x<gw-1?A[i+1]:0;
+        const u=y>0?A[ru+x]:0, d=y<gh-1?A[rd+x]:0;
+        B[i]=t+Keff*((l+r+u+d)-4*t);
+      }
+    }
+    const tmp=A;A=B;B=tmp;
+  }
+}
+function pasoDecay(){
+  for(let i=0;i<A.length;i++){
+    let v=A[i]*persist;
+    if(v>1.6)v=1.6;else if(v<-1.6)v=-1.6;
+    A[i]=v;
+  }
+}
+function splatPx(px,py,amt,rad){
+  const x0=Math.round(px/CELL),y0=Math.round(py/CELL),r2=rad*rad;
+  for(let dy=-rad;dy<=rad;dy++){
+    const y=y0+dy;if(y<0||y>=gh)continue;
+    for(let dx=-rad;dx<=rad;dx++){
+      const x=x0+dx;if(x<0||x>=gw)continue;
+      A[y*gw+x]+=amt*Math.exp(-(dx*dx+dy*dy)/r2);
+    }
+  }
+}
+function muestraPx(px,py){
+  const x=clamp(Math.round(px/CELL),0,gw-1),y=clamp(Math.round(py/CELL),0,gh-1);
+  return A[y*gw+x];
+}
+function gradPx(px,py){
+  const x=clamp(Math.round(px/CELL),0,gw-1),y=clamp(Math.round(py/CELL),0,gh-1);
+  const i=y*gw+x;
+  const gx=((x<gw-1?A[i+1]:A[i])-(x>0?A[i-1]:A[i]))*0.5;
+  const gy=((y<gh-1?A[i+gw]:A[i])-(y>0?A[i-gw]:A[i]))*0.5;
+  return [gx,gy];
+}
+
+/* ---------- seres ---------- */
+function fuegoInnato(){
+  const u=Math.random();
+  if(u<0.60)return Math.random()*0.4-0.2;
+  if(u<0.80)return -(0.75+Math.random()*0.3);
+  return 0.8+Math.random()*0.3;
+}
+function organosBase(){
+  const parts=[];
+  for(let i=0;i<nOrganos;i++){
+    parts.push({
+      ang:Math.random()*6.2832,
+      w:(0.25+Math.random()*0.5)*(Math.random()<0.5?-1:1),
+      r0:14+40*(1-i/nOrganos)+Math.random()*8,
+      rw:0.5+Math.random()*0.9,ph:Math.random()*6.2832,T:0,
+      amp:0.35+Math.random()*0.5,
+      fr:(0.10+Math.random()*0.30)*6.2832,phT:Math.random()*6.2832,x:0,y:0
+    });
+  }
+  return parts;
+}
+function crearSeres(inicioEscenico){
+  seres=[]; efectos=[]; nNacidos=0; cerrarFicha();
+  const t0=tSim;
+  for(let s=0;s<nSeres;s++){
+    const parts=organosBase();
+    const b={
+      cx:W*0.2+Math.random()*W*0.6,
+      cy:H*0.26+Math.random()*H*0.48,
+      vx:0,vy:0,s1:Math.random()*10,s2:Math.random()*10,
+      parts,set:fuegoInnato(),
+      despierto:false,despertar:inicioEscenico?1.1+s*0.75:t0+0.12*s,
+      nac:0,nivelPrev:-1,Tm:0,idx:++nNacidos
+    };
+    for(const p of b.parts)p.T=b.set;
+    b.Tm=b.set;
+    posOrganos(b);
+    seres.push(b);
+  }
+}
+function posOrganos(b){
+  for(const p of b.parts){
+    p.x=b.cx+Math.cos(p.ang)*p.r0;
+    p.y=b.cy+Math.sin(p.ang)*p.r0*0.78;
+  }
+}
+function despertar(b,porEscena){
+  b.despierto=true;b.nac=tSim;
+  b.parts[0].T=clamp(b.parts[0].T+1.0,-1.2,1.2);
+  splatPx(b.cx,b.cy,0.9,2);
+  efectos.push({x:b.cx,y:b.cy,r:8,a:0.9,c:'#ffa14f'});
+  const nv=nivelDe(b.set);b.nivelPrev=nv;
+  log(`El espíritu del fuego toca al Ser ${romDe(b.idx)} — ${NIVELES[nv].nombre}`);
+}
+function invocar(tipo){
+  if(seres.length>=MAX_SER){log('El espacio no admite más cuerpos');return;}
+  const set=tipo==='frio'?-(0.75+Math.random()*0.3):(0.8+Math.random()*0.3);
+  const parts=organosBase();
+  for(const p of parts)p.T=set;
+  const b={
+    cx:120+Math.random()*(W-240), cy:120+Math.random()*(H-240),
+    vx:0,vy:0,s1:Math.random()*10,s2:Math.random()*10,
+    parts,set,despierto:true,despertar:0,nac:tSim,
+    nivelPrev:-1,Tm:set,idx:++nNacidos
+  };
+  posOrganos(b);
+  const nv=nivelDe(set);b.nivelPrev=nv;
+  seres.push(b);
+  splatPx(b.cx,b.cy,set,3);
+  efectos.push({x:b.cx,y:b.cy,r:8,a:1,c:NIVELES[nv].color});
+  log(`Invocado el Ser ${romDe(b.idx)} — ${tipo==='frio'?'aliento gélido':'espíritu del fuego'}`);
+  abrirFicha(seres.length-1);
+}
+function actualizarSeres(dt,t){
+  const fric=Math.pow(0.12,dt);
+  for(const b of seres){
+    if(!b.despierto){
+      if(t>=b.despertar)despertar(b,true);
+      else continue;
+    }
+    const dir=1-2*smooth(0.10,0.70,b.Tm);
+    const g=gradPx(b.cx,b.cy);
+    b.vx=(b.vx+g[0]*140*dir*dt)*fric;
+    b.vy=(b.vy+g[1]*140*dir*dt)*fric;
+    b.vx+=26*Math.cos(t*0.31+b.s1)*dt+14*Math.cos(t*0.77+b.s2)*dt;
+    b.vy+=26*Math.sin(t*0.27+b.s2)*dt+14*Math.sin(t*0.71+b.s1)*dt;
+    for(const o of seres){
+      if(o===b||!o.despierto)continue;
+      const dx=b.cx-o.cx,dy=b.cy-o.cy,d=Math.hypot(dx,dy);
+      if(d>1&&d<90){const f=(90-d)/90*55*dt/d;b.vx+=dx*f;b.vy+=dy*f;}
+    }
+    const mg=50;
+    if(b.cx<mg)b.vx+=(mg-b.cx)*1.2*dt; if(b.cx>W-mg)b.vx-=(b.cx-W+mg)*1.2*dt;
+    if(b.cy<mg)b.vy+=(mg-b.cy)*1.2*dt; if(b.cy>H-mg)b.vy-=(b.cy-H+mg)*1.2*dt;
+    const v=Math.hypot(b.vx,b.vy);
+    if(v>46){b.vx*=46/v;b.vy*=46/v;}
+    b.cx+=b.vx*dt;b.cy+=b.vy*dt;
+
+    const P=b.parts,n=P.length;
+    const dT=new Float32Array(n);
+    for(let i=0;i<n;i++){
+      const p=P[i];
+      p.ang+=p.w*dt;
+      const r=p.r0*(1+0.22*Math.sin(t*p.rw+p.ph));
+      p.x=b.cx+Math.cos(p.ang)*r;
+      p.y=b.cy+Math.sin(p.ang)*r*0.78;
+      dT[i]=(p.amp*latido*Math.sin(t*p.fr+p.phT)
+             +0.22*muestraPx(p.x,p.y)
+             +(b.set-p.T)*K_REST
+             -K_DISIP*p.T)*dt;
+    }
+    for(let i=0;i<n;i++){
+      const pv=i>0?P[i-1].T:P[i].T, nx=i<n-1?P[i+1].T:P[i].T;
+      dT[i]+=2.6*(pv+nx-2*P[i].T)*dt;
+    }
+    for(let i=0;i<n;i++){
+      const p=P[i];
+      p.T=clamp(p.T+dT[i],-1.2,1.2);
+      splatPx(p.x,p.y,p.T*0.50,1);
+      splatPx(p.x,p.y,p.T*0.16,3);
+    }
+    let Tm=0;for(const p of P)Tm+=p.T;Tm/=n;b.Tm=Tm;
+    const nv=nivelDe(Tm);
+    if(nv!==b.nivelPrev&&b.nivelPrev>=0){
+      efectos.push({x:b.cx,y:b.cy,r:10,a:0.85,c:NIVELES[nv].color});
+      log(`El Ser ${romDe(b.idx)} ${nv>b.nivelPrev?'asciende a':'desciende a'} ${NIVELES[nv].nombre}`);
+    }
+    b.nivelPrev=nv;
+  }
+}
+
+/* ---------- ficha de bestiario ---------- */
+const fichaEl=document.getElementById('ficha');
+const fNum=document.getElementById('fNum'),fNivel=document.getElementById('fNivel'),
+      fCita=document.getElementById('fCita'),fTm=document.getElementById('fTm'),
+      fTc=document.getElementById('fTc'),fFl=document.getElementById('fFl'),
+      fHz=document.getElementById('fHz'),fSet=document.getElementById('fSet'),
+      fEd=document.getElementById('fEd'),fEst=document.getElementById('fEst');
+const fE=document.getElementById('fEscala'),bloques=[];
+NIVELES.forEach(N=>{
+  const d=document.createElement('div');
+  d.style.background=N.color;fE.appendChild(d);bloques.push(d);
+});
+const fMarca=document.createElement('div');fMarca.id='fMarca';fE.appendChild(fMarca);
+
+let fichaIdx=-1;
+const fmtT=v=>(v<0?'−':'+')+Math.abs(v).toFixed(3);
+function abrirFicha(i){fichaIdx=i;fichaEl.classList.add('abierta');}
+function cerrarFicha(){fichaIdx=-1;fichaEl.classList.remove('abierta');}
+document.getElementById('fClose').addEventListener('click',cerrarFicha);
+
+function updateFicha(){
+  if(fichaIdx<0||fichaIdx>=seres.length)return;
+  const b=seres[fichaIdx];
+  const Tm=b.despierto?b.Tm:b.set;
+  let flujo=0;
+  for(let i=0;i<b.parts.length-1;i++)flujo+=Math.abs(b.parts[i].T-b.parts[i+1].T);
+  flujo/=Math.max(1,b.parts.length-1);
+  const nv=nivelDe(Tm),N=NIVELES[nv];
+  fNum.textContent=`FICHA · SER ${romDe(b.idx)}`;
+  fNivel.textContent=`${N.nombre} · NIVEL ${nv}`;
+  fNivel.style.color=N.color;
+  fCita.textContent=N.cita;
+  fTm.textContent=fmtT(Tm);
+  fTc.textContent=fmtT(b.parts[0].T)+' / '+fmtT(b.parts[b.parts.length-1].T);
+  fFl.textContent=flujo.toFixed(3);
+  fHz.textContent=(b.parts[0].fr/6.2832).toFixed(2)+' Hz';
+  fSet.textContent=fmtT(b.set);
+  fEd.textContent=b.despierto?(tSim-b.nac).toFixed(0)+' s':'—';
+  fEst.textContent=b.despierto?N.estado.toUpperCase():'DORMIDO';
+  fMarca.style.left=(clamp(Tm+1.2,0,2.4)/2.4*100).toFixed(1)+'%';
+  bloques.forEach((el,i)=>el.style.opacity=i===nv?1:0.22);
+  fichaEl.style.transform=
+    `translate(${clamp(b.cx+30,12,Math.max(12,W-266))}px,${clamp(b.cy-24,12,Math.max(12,H-332))}px)`;
+}
+
+/* ---------- interacción ---------- */
+let mx=-1,my=-1,pmx=-1,pmy=-1,presionado=false,tPres=0,movido=0,esTouch=false,dentro=false;
+function brasa(x,y,d){if(d>0.5)splatPx(x,y,clamp(d*0.045,0.12,1.1),2);}
+function interaccionContinua(){
+  if(!dentro)return;
+  const frioPorToque=esTouch&&presionado&&movido<10&&(performance.now()-tPres)>300;
+  if(presionado&&(!esTouch||frioPorToque))splatPx(mx,my,-1.15,3);
+}
+cv.addEventListener('pointermove',e=>{
+  mx=e.clientX;my=e.clientY;
+  if(pmx<0){pmx=mx;pmy=my;}
+  const d=Math.hypot(mx-pmx,my-pmy);
+  movido+=d;
+  if(!presionado||esTouch)brasa(mx,my,d);
+  pmx=mx;pmy=my;dentro=true;
+});
+cv.addEventListener('pointerdown',e=>{
+  cv.setPointerCapture(e.pointerId);
+  presionado=true;esTouch=e.pointerType==='touch';
+  tPres=performance.now();movido=0;
+  mx=pmx=e.clientX;my=pmy=e.clientY;dentro=true;
+});
+cv.addEventListener('pointerup',e=>{
+  const rapido=movido<7&&(performance.now()-tPres)<350;
+  presionado=false;
+  if(!rapido)return;
+  let mejor=-1,dm=70;
+  seres.forEach((b,i)=>{
+    const d=Math.hypot(b.cx-e.clientX,b.cy-e.clientY);
+    if(d<dm){dm=d;mejor=i;}
+  });
+  if(mejor<0){cerrarFicha();splatPx(e.clientX,e.clientY,0.35,2);return;}
+  const b=seres[mejor];
+  if(!b.despierto)despertar(b,false);
+  else{
+    b.parts[0].T=clamp(b.parts[0].T+1.0,-1.2,1.2);
+    const dx=b.cx-e.clientX,dy=b.cy-e.clientY,d=Math.hypot(dx,dy)||1;
+    b.vx+=dx/d*40;b.vy+=dy/d*40;
+    splatPx(b.cx,b.cy,0.8,2);
+  }
+  abrirFicha(mejor);
+});
+cv.addEventListener('pointerleave',()=>{dentro=false;});
+addEventListener('keydown',e=>{
+  if(e.repeat)return;
+  if(e.code==='Space'){e.preventDefault();togglePausa();}
+  else if(e.key==='f'||e.key==='F')invocar('frio');
+  else if(e.key==='v'||e.key==='V')invocar('fuego');
+  else if(e.key==='Escape')cerrarFicha();
+});
+
+/* ---------- render ---------- */
+function renderCampo(){
+  const px=img.data,n=gw*gh;
+  let p=0;
+  if(modo==='T'){
+    for(let i=0;i<n;i++){
+      const u=(((clamp(A[i],-1,1))+1)*127.5)|0,q=u*3;
+      px[p++]=LUT_T[q];px[p++]=LUT_T[q+1];px[p++]=LUT_T[q+2];px[p++]=255;
+    }
+  }else{
+    for(let y=0;y<gh;y++){
+      for(let x=0;x<gw;x++){
+        const i=y*gw+x;
+        const dx=(x<gw-1?A[i+1]:A[i])-(x>0?A[i-1]:A[i]);
+        const dy=(y<gh-1?A[i+gw]:A[i])-(y>0?A[i-gw]:A[i]);
+        const u=(Math.min(1,Math.hypot(dx,dy)*5.5)*255)|0,q=u*3;
+        px[p++]=LUT_G[q];px[p++]=LUT_G[q+1];px[p++]=LUT_G[q+2];px[p++]=255;
+      }
+    }
+  }
+  octx.putImageData(img,0,0);
+  ctx.imageSmoothingEnabled=true;
+  ctx.imageSmoothingQuality='high';
+  ctx.drawImage(off,0,0,W,H);
+  /* bloom: doble reducción del campo, sumado aditivamente */
+  b1ctx.drawImage(off,0,0,bloom1.width,bloom1.height);
+  b2ctx.drawImage(bloom1,0,0,bloom2.width,bloom2.height);
+  ctx.globalCompositeOperation='lighter';
+  ctx.globalAlpha=0.30; ctx.drawImage(bloom1,0,0,W,H);
+  ctx.globalAlpha=0.42; ctx.drawImage(bloom2,0,0,W,H);
+  ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
+}
+function dibujarCuerpos(){
+  ctx.lineWidth=1;
+  ctx.font='9px "IBM Plex Mono",monospace';
+  ctx.textAlign='center';
+  for(let si=0;si<seres.length;si++){
+    const b=seres[si];
+    if(!b.despierto){
+      ctx.fillStyle='rgba(120,130,160,0.14)';
+      for(const p of b.parts){ctx.beginPath();ctx.arc(p.x,p.y,1,0,6.2832);ctx.fill();}
+      ctx.strokeStyle='rgba(120,130,160,0.28)';
+      ctx.beginPath();ctx.arc(b.cx,b.cy,3,0,6.2832);ctx.stroke();
+      continue;
+    }
+    const P=b.parts;
+    for(let i=0;i<P.length-1;i++){
+      const a=P[i],c=P[i+1],dT=Math.abs(a.T-c.T);
+      const al=Math.min(0.55,dT*1.5);
+      if(al<0.02)continue;
+      const u=(((clamp((a.T+c.T)*0.5,-1,1))+1)*127.5)|0,q=u*3;
+      ctx.strokeStyle=`rgba(${LUT_T[q]},${LUT_T[q+1]},${LUT_T[q+2]},${al})`;
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(c.x,c.y);ctx.stroke();
+    }
+    for(const q of P){
+      const at=Math.abs(q.T);if(at<0.02)continue;
+      const u=(((clamp(q.T,-1,1))+1)*127.5)|0,j=u*3;
+      if(at>0.5){
+        ctx.shadowColor=`rgb(${LUT_T[j]},${LUT_T[j+1]},${LUT_T[j+2]})`;
+        ctx.shadowBlur=10*at;
+      }else ctx.shadowBlur=0;
+      ctx.fillStyle=`rgba(${LUT_T[j]},${LUT_T[j+1]},${LUT_T[j+2]},0.9)`;
+      ctx.beginPath();ctx.arc(q.x,q.y,1.1+2.1*at,0,6.2832);ctx.fill();
+      ctx.shadowBlur=0;
+      if(at>0.8){
+        ctx.globalAlpha=0.25;
+        ctx.beginPath();ctx.arc(q.x,q.y,3.5+2.1*at,0,6.2832);ctx.stroke();
+        ctx.globalAlpha=1;
+      }
+    }
+    const nv=nivelDe(b.Tm);
+    ctx.fillStyle=hexA(NIVELES[nv].color,si===fichaIdx?0.95:0.5);
+    ctx.fillText(romDe(b.idx),b.cx,b.cy+b.parts[0].r0*0.78+16);
+  }
+  if(fichaIdx>=0&&fichaIdx<seres.length){
+    const b=seres[fichaIdx];
+    ctx.setLineDash([3,5]);
+    ctx.lineDashOffset=-tSim*12;
+    ctx.strokeStyle='rgba(255,161,79,0.55)';
+    ctx.beginPath();ctx.arc(b.cx,b.cy,80,0,6.2832);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  ctx.lineWidth=1;
+  for(let i=efectos.length-1;i>=0;i--){
+    const e=efectos[i];
+    e.r+=95*fdt;e.a-=1.2*fdt;
+    if(e.a<=0){efectos.splice(i,1);continue;}
+    ctx.strokeStyle=hexA(e.c,e.a*0.8);
+    ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,6.2832);ctx.stroke();
+  }
+}
+
+/* ---------- lecturas ---------- */
+const rT=document.getElementById('rT'),rF=document.getElementById('rF'),
+      rS=document.getElementById('rS'),rFps=document.getElementById('rFps'),
+      rC=document.getElementById('rC');
+let frLect=0;
+function lecturas(){
+  if(++frLect%12)return;
+  let st=0,sf=0;
+  for(let k=0;k<240;k++){
+    const x=1+(Math.random()*(gw-2))|0,y=1+(Math.random()*(gh-2))|0,i=y*gw+x;
+    st+=A[i];
+    sf+=Math.hypot(A[i+1]-A[i-1],A[i+gw]-A[i-gw]);
+  }
+  rT.textContent=(st/240>=0?'+':'−')+(st/240).toFixed(3);
+  rF.textContent=(sf/240).toFixed(3);
+  rS.textContent=seres.filter(s=>s.despierto).length+'/'+seres.length;
+  rFps.textContent=Math.round(fps);
+  rC.textContent=CALIDADES[calIdx].n;
+}
+
+/* ---------- panel ---------- */
+function enlazar(id,vId,fn,fmt){
+  const s=document.getElementById(id),v=document.getElementById(vId);
+  s.addEventListener('input',()=>{fn(+s.value);v.textContent=fmt(+s.value);});
+}
+enlazar('sK','vK',x=>{K=x;configurarDifusion();},x=>x.toFixed(3));
+enlazar('sP','vP',x=>persist=x,x=>x.toFixed(4));
+enlazar('sN','vN',x=>{nSeres=x;crearSeres(false);},x=>x);
+enlazar('sM','vM',x=>{nOrganos=x;crearSeres(false);},x=>x);
+enlazar('sL','vL',x=>latido=x,x=>x.toFixed(2));
+
+const bP=document.getElementById('bP');
+function togglePausa(){
+  pausado=!pausado;
+  bP.textContent=pausado?'SEGUIR':'PAUSA';
+  bP.classList.toggle('activo',pausado);
+}
+bP.addEventListener('click',function(){togglePausa();this.blur();});
+document.getElementById('bO').addEventListener('click',function(){A.fill(0);log('El campo olvida');this.blur();});
+const bT=document.getElementById('bT'),bG=document.getElementById('bG');
+bT.addEventListener('click',function(){modo='T';bT.classList.add('activo');bG.classList.remove('activo');this.blur();});
+bG.addEventListener('click',function(){modo='G';bG.classList.add('activo');bT.classList.remove('activo');this.blur();});
+
+const bC=document.getElementById('bC');
+function etiquetaCal(){bC.textContent='CALIDAD · '+(autoCal?'AUTO·'+CALIDADES[calIdx].n:CALIDADES[calIdx].n);}
+bC.addEventListener('click',function(){
+  const actual=autoCal?'AUTO':CALIDADES[calIdx].n;
+  const nx=MODOS[(MODOS.indexOf(actual)+1)%MODOS.length];
+  if(nx==='AUTO')autoCal=true;
+  else{autoCal=false;calIdx=MODOS.indexOf(nx);}
+  crearCampo();etiquetaCal();this.blur();
+});
+
+document.getElementById('bF').addEventListener('click',function(){invocar('frio');this.blur();});
+document.getElementById('bV').addEventListener('click',function(){invocar('fuego');this.blur();});
+
+/* ---------- leyenda ---------- */
+const leyNiv=document.getElementById('leyNiv');
+NIVELES.forEach(N=>{
+  const s=document.createElement('span');
+  s.innerHTML=`<i style="background:${N.color}"></i>${N.corto}`;
+  leyNiv.appendChild(s);
+});
+
+/* ---------- epígrafe rotativo ---------- */
+const CITAS=[
+  {t:'«…un ciego y sordo e impalpable conjunto de calores y fríos articulados.»',
+   a:'EL LIBRO DE LOS SERES IMAGINARIOS · BORGES–GUERRERO · 1957'},
+  {t:'«Para el investigador, el calor no es otra cosa que una substancia aún más sutil que un gas.»',
+   a:'RUDOLF STEINER, CITADO POR BORGES'},
+  {t:'«¿Las soñó porque alguna vez habían ocurrido, en el fondo del tiempo?»',
+   a:'J. L. BORGES'}
+];
+const epi=document.getElementById('epi'),epiTxt=document.getElementById('epiTxt'),epiAut=document.getElementById('epiAut');
+let citaIdx=0;
+setInterval(()=>{
+  epi.style.opacity=0;
+  setTimeout(()=>{
+    citaIdx=(citaIdx+1)%CITAS.length;
+    epiTxt.textContent=CITAS[citaIdx].t;
+    epiAut.textContent=CITAS[citaIdx].a;
+    epi.style.opacity='';
+  },850);
+},9000);
+
+/* ---------- arranque ---------- */
+function redimensionar(){
+  dpr=Math.min(devicePixelRatio||1,2);
+  W=innerWidth;H=innerHeight;
+  cv.width=W*dpr;cv.height=H*dpr;
+  cv.style.width=W+'px';cv.style.height=H+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  crearCampo();
+  for(const b of seres){b.cx=clamp(b.cx,60,W-60);b.cy=clamp(b.cy,60,H-60);}
+}
+addEventListener('resize',redimensionar);
+redimensionar();
+crearSeres(true);
+etiquetaCal();
+setTimeout(()=>log('Época saturnina — los cuerpos yacen en el calor'),1400);
+
+let tPrev=performance.now(),fdt=1/60;
+function frame(now){
+  requestAnimationFrame(frame);
+  const dtRaw=(now-tPrev)/1000;tPrev=now;
+  fps=lerp(fps,1/Math.max(dtRaw,1e-4),0.06);
+  fdt=Math.min(dtRaw,0.05);
+  msEMA=msEMA*0.95+dtRaw*1000*0.05;
+  if(autoCal&&++calCool>150){
+    calCool=0;
+    if(msEMA>26&&calIdx>0){calIdx--;crearCampo();}
+    else if(msEMA<13&&calIdx<3){calIdx++;crearCampo();}
+  }
+  if(!pausado){
+    tSim+=fdt;
+    interaccionContinua();
+    actualizarSeres(fdt,tSim);
+    pasoDifusion();
+    pasoDecay();
+  }
+  renderCampo();
+  dibujarCuerpos();
+  updateFicha();
+  lecturas();
+}
+requestAnimationFrame(frame);
+
+/* modo embebido (?embed=1): oculta la leyenda de gestos */
+if(new URLSearchParams(location.search).has('embed')){
+  const l=document.getElementById('leyenda');
+  if(l)l.style.display='none';
+}
+</script>
+</body>
+</html>
