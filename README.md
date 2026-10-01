@@ -183,6 +183,7 @@ La ecuación que gobierna todo el sistema es:
 Con $\Delta x = \Delta y = 1$ (unidades de grilla):
 
  $$\nabla^2 T_{i,j} = T_{i+1,j} + T_{i-1,j} + T_{i,j+1} + T_{i,j-1} - 4T_{i,j}$$ 
+
 En 3D el stencil tiene 7 puntos (6 vecinos + centro):
 
  $$\nabla^2 T_{i,j,k} = T_{i\pm1,j,k} + T_{i,j\pm1,k} + T_{i,j,k\pm1} - 6T_{i,j,k}$$ 
@@ -190,6 +191,7 @@ En 3D el stencil tiene 7 puntos (6 vecinos + centro):
 ### 3. La fuente gaussiana de cada ser
 
   $$S_i(x,y) = \underset{\text{amplitud}}{\frac{E_i}{E_0}} \cdot A \cdot \underset{\text{cuerpo gaussiano}}{e^{-\frac{(x-x_i)^2+(y-y_i)^2}{2\sigma_i^2}}} \cdot \underset{\text{pulso vital}}{\left[1 + a\sin(\omega_i t + \phi_i)\right]}$$ 
+
 El exponencial define la forma espacial del ser ("cuerpo impalpable"). El factor $E_i/E_0$ hace que el cuerpo se apague gradualmente conforme el ser pierde energía y muere.
 
 ### 4. Dinámica energética: el metabolismo
@@ -451,9 +453,11 @@ El esquema explícito de Euler en grilla 2D:
 
  $$u_{i,j}^{n+1} = u_{i,j}^n + \Delta t \left[ D_u \nabla^2 u_{i,j}^n - u_{i,j}^n (v_{i,j}^n)^2 + F(1 - u_{i,j}^n) \right]$$ 
  $$v_{i,j}^{n+1} = v_{i,j}^n + \Delta t \left[ D_v \nabla^2 v_{i,j}^n + u_{i,j}^n (v_{i,j}^n)^2 - (F+k) v_{i,j}^n \right]$$ 
+
 Donde el laplaciano discreto es:
 
  $$\nabla^2 f_{i,j} = f_{i+1,j} + f_{i-1,j} + f_{i,j+1} + f_{i,j-1} - 4 f_{i,j}$$ 
+
 Condición de estabilidad numérica (von Neumann):
 
  $$\Delta t \leq \frac{\Delta x^2}{4 \max(D_u, D_v)}$$ 
