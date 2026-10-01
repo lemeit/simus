@@ -155,7 +155,8 @@ patrón de concentración que se mantiene, crece, se divide y desaparece.
 
 La ecuación del calor parece compleja en forma continua. Pero al discretizarla sobre una grilla, se convierte en **aritmética pura**:
 
-  $$T_{i,j}^{n+1} = T_{i,j}^n + k\,\underset{\text{laplaciano discreto}}{\left(T_{i+1,j}^n + T_{i-1,j}^n + T_{i,j+1}^n + T_{i,j-1}^n - 4T_{i,j}^n\right)} - \lambda\,T_{i,j}^n$$ 
+  $$T_{i,j}^{n+1} = T_{i,j}^n + k\,\underset{\text{laplaciano discreto}}{\left(T_{i+1,j}^n + T_{i-1,j}^n + T_{i,j+1}^n + T_{i,j-1}^n - 4T_{i,j}^n\right)} - \lambda\,T_{i,j}^n$$
+
 Por celda: 4 lecturas + 4 sumas + 2 multiplicaciones = **~10 operaciones**. Con una grilla 280×200 = 56.000 celdas a 120 pasos/segundo:
 
  $$56.000 \times 120 \times 10 \approx 67 \text{ Mflops/s}$$ 
@@ -188,7 +189,7 @@ En 3D el stencil tiene 7 puntos (6 vecinos + centro):
 
 ### 3. La fuente gaussiana de cada ser
 
- $$S_i(x,y) = \underbrace{\frac{E_i}{E_0}}_{\text{amplitud}} \cdot A \cdot \underbrace{e^{-\frac{(x-x_i)^2+(y-y_i)^2}{2\sigma_i^2}}}_{\text{cuerpo gaussiano}} \cdot \underbrace{\left[1 + a\sin(\omega_i t + \phi_i)\right]}_{\text{pulso vital}}$$ 
+  $$S_i(x,y) = \underset{\text{amplitud}}{\frac{E_i}{E_0}} \cdot A \cdot \underset{\text{cuerpo gaussiano}}{e^{-\frac{(x-x_i)^2+(y-y_i)^2}{2\sigma_i^2}}} \cdot \underset{\text{pulso vital}}{\left[1 + a\sin(\omega_i t + \phi_i)\right]}$$ 
 El exponencial define la forma espacial del ser ("cuerpo impalpable"). El factor $E_i/E_0$ hace que el cuerpo se apague gradualmente conforme el ser pierde energía y muere.
 
 ### 4. Dinámica energética: el metabolismo
@@ -204,6 +205,7 @@ Sin recarga. El tiempo de vida máximo es $t_{\text{vida}} = E_0 / \mu$.
  $$\text{Nacimiento:} \quad P(\text{nuevo ser por paso}) = p_{\text{birth}}$$ 
  $$\text{Reproducción:} \quad E_i > r \cdot E_0 \;\Rightarrow\; E_i \to 0.6 E_0, \quad \text{crear hijo con } E_{\text{hijo}} = 0.4 E_0$$ 
  $$\text{Muerte:} \quad E_i \leq 0 \;\Rightarrow\; \text{eliminar ser, campo absorbe calor residual}$$ 
+
 ### 6. El esquema numérico completo (Euler explícito)
 
  $$T_{i,j}^{n+1} = T_{i,j}^n + k \cdot \left(T_{i+1,j}^n + T_{i-1,j}^n + T_{i,j+1}^n + T_{i,j-1}^n - 4T_{i,j}^n\right) - \lambda \Delta t \cdot T_{i,j}^n + \Delta t \cdot \sum_i S_i(i,j)$$ 
