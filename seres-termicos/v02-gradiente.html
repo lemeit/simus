@@ -21,6 +21,11 @@ input{flex:1;accent-color:#c87}
 #fps{position:fixed;right:14px;top:12px;color:#444;font:11px monospace}
 .eq{color:#6af;font:11px monospace;margin-top:8px;padding:6px 8px;
     background:#050810;border-radius:6px;border:1px solid #1a2030}
+.panel button{margin-top:9px;width:100%;padding:6px 0;background:#141a26;
+  color:#c87;border:1px solid #2a3242;border-radius:7px;cursor:pointer;
+   font:600 11px monospace;letter-spacing:.12em;text-transform:uppercase;
+   transition:border-color .15s,color .15s}
+.panel button:hover{border-color:#c87;color:#ffb}
 </style>
 </head>
 <body>
@@ -40,7 +45,8 @@ input{flex:1;accent-color:#c87}
   <div class="row"><span>Enfriamiento λ</span>
     <input id="lm" type="range" min="0" max="50" value="12">
     <output id="lmo">0.012</output></div>
-  <div class="eq">dT/dt = α∇²T + S(x,y,t) − λT<br>F_i = ±k·∇T(x_i,y_i)</div>
+    <button id="reset">reset campo</button>
+    <div class="eq">dT/dt = α∇²T + S(x,y,t) − λT<br>F_i = ±k·∇T(x_i,y_i)</div>
 </div>
 <div id="fps"></div>
 
@@ -199,7 +205,8 @@ document.getElementById('al').oninput = function(){ document.getElementById('alo
 document.getElementById('kk').oninput = function(){ document.getElementById('kko').textContent=(this.value/100).toFixed(2); };
 document.getElementById('lm').oninput = function(){ document.getElementById('lmo').textContent=(this.value/1000).toFixed(3); };
 document.getElementById('ns').oninput = function(){ resetBeings(); };
-document.getElementById('reset').onclick = function(){ T.fill(0); Tnxt.fill(0); resetBeings(); };
+const rst = document.getElementById('reset');
+if (rst) rst.onclick = function(){ T.fill(0); Tnxt.fill(0); resetBeings(); };
 
 let tick = 0, fpsFrames = 0, fpsTime = performance.now(), lastTime = performance.now();
 
