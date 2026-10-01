@@ -155,7 +155,7 @@ patrón de concentración que se mantiene, crece, se divide y desaparece.
 
 La ecuación del calor parece compleja en forma continua. Pero al discretizarla sobre una grilla, se convierte en **aritmética pura**:
 
- $$T_{i,j}^{n+1} = T_{i,j}^n + k\underbrace{\left(T_{i+1,j}^n + T_{i-1,j}^n + T_{i,j+1}^n + T_{i,j-1}^n - 4T_{i,j}^n\right)}_{\text{laplaciano discreto}} - \lambda T_{i,j}^n$$ 
+  $$T_{i,j}^{n+1} = T_{i,j}^n + k\,\underset{\text{laplaciano discreto}}{\left(T_{i+1,j}^n + T_{i-1,j}^n + T_{i,j+1}^n + T_{i,j-1}^n - 4T_{i,j}^n\right)} - \lambda\,T_{i,j}^n$$ 
 Por celda: 4 lecturas + 4 sumas + 2 multiplicaciones = **~10 operaciones**. Con una grilla 280×200 = 56.000 celdas a 120 pasos/segundo:
 
  $$56.000 \times 120 \times 10 \approx 67 \text{ Mflops/s}$$ 
@@ -185,6 +185,7 @@ Con $\Delta x = \Delta y = 1$ (unidades de grilla):
 En 3D el stencil tiene 7 puntos (6 vecinos + centro):
 
  $$\nabla^2 T_{i,j,k} = T_{i\pm1,j,k} + T_{i,j\pm1,k} + T_{i,j,k\pm1} - 6T_{i,j,k}$$ 
+
 ### 3. La fuente gaussiana de cada ser
 
  $$S_i(x,y) = \underbrace{\frac{E_i}{E_0}}_{\text{amplitud}} \cdot A \cdot \underbrace{e^{-\frac{(x-x_i)^2+(y-y_i)^2}{2\sigma_i^2}}}_{\text{cuerpo gaussiano}} \cdot \underbrace{\left[1 + a\sin(\omega_i t + \phi_i)\right]}_{\text{pulso vital}}$$ 
