@@ -117,30 +117,17 @@ emergen organismos completamente diferentes.
 
 ---
 
-## Ciclo de vida emergente
+## Ciclo de vida emergente (Gray-Scott, v04)
 
-Con Gray-Scott los seres tienen un ciclo de vida real:
-NACIMIENTO: fluctuación local de v supera un umbral
-(perturbación inicial o espontánea)
+Con Gray-Scott los seres tienen un ciclo de vida real — **emergente**: ninguna
+de estas etapas está programada, todas salen de $uv^2$ y de la competencia
+entre difusión y reacción:
 
-CRECIMIENTO: v se expande consumiendo u en su entorno
-La velocidad depende de la disponibilidad de alimento
-
-REPRODUCCIÓN: cuando v crece demasiado, la zona central se agota
-→ la mancha se divide en dos (mitosis química)
-
-COMPETENCIA: dos manchas compiten por el u disponible entre ellas
-Si el espacio es limitado, una puede absorber o eliminar a la otra
-
-MUERTE: cuando u local cae a cero, v no puede sostenerse
-La mancha se disuelve → campo uniforme u=1, v=0
-
-EXTINCIÓN: si k es demasiado alto o F demasiado bajo,
-todas las manchas mueren y el sistema llega al equilibrio
-
-
-Esto no está programado explícitamente. Sale de $uv^2$ y de la competencia
-entre difusión y reacción.
+- **NACIMIENTO** — fluctuación local de $v$ supera un umbral (perturbación inicial o espontánea)
+- **CRECIMIENTO** — $v$ se expande consumiendo $u$ en su entorno; la velocidad depende de la disponibilidad de alimento
+- **REPRODUCCIÓN** — cuando $v$ crece demasiado, la zona central se agota → la mancha se divide en dos (mitosis química)
+- **COMPETENCIA** — dos manchas compiten por el $u$ disponible entre ellas; si el espacio es limitado, una puede absorber o eliminar a la otra
+- **MUERTE** — cuando el $u$ local cae a cero, $v$ no puede sostenerse; la mancha se disuelve → campo uniforme $u=1,\; v=0$ - **EXTINCIÓN** — si $k$ es demasiado alto o $F$ demasiado bajo, todas las manchas mueren y el sistema llega al equilibrio
 
 ---
 
@@ -198,11 +185,10 @@ Con $\Delta x = \Delta y = 1$ (unidades de grilla):
 En 3D el stencil tiene 7 puntos (6 vecinos + centro):
 
  $$\nabla^2 T_{i,j,k} = T_{i\pm1,j,k} + T_{i,j\pm1,k} + T_{i,j,k\pm1} - 6T_{i,j,k}$$ 
-
 ### 3. La fuente gaussiana de cada ser
 
- $$S_i(x,y) = \underbrace{\frac{E_i}{E_0}}_{\text{amplitud}} \cdot A \cdot \underbrace{e^{-\frac{(x-x_i)^2+(y-y_i)^2}{2\sigma_i^2}}}_{\text{cuerpo gaussiano}} \cdot \underbrace{\left[1 + a\sin(\omega_i t + \phi_i)\right]}_{\text{pulso vital}}$$
- El exponencial define la forma espacial del ser ("cuerpo impalpable"). El factor $E_i/E_0$ hace que el cuerpo se apague gradualmente conforme el ser pierde energía y muere.
+ $$S_i(x,y) = \underbrace{\frac{E_i}{E_0}}_{\text{amplitud}} \cdot A \cdot \underbrace{e^{-\frac{(x-x_i)^2+(y-y_i)^2}{2\sigma_i^2}}}_{\text{cuerpo gaussiano}} \cdot \underbrace{\left[1 + a\sin(\omega_i t + \phi_i)\right]}_{\text{pulso vital}}$$ 
+El exponencial define la forma espacial del ser ("cuerpo impalpable"). El factor $E_i/E_0$ hace que el cuerpo se apague gradualmente conforme el ser pierde energía y muere.
 
 ### 4. Dinámica energética: el metabolismo
 
@@ -271,23 +257,14 @@ El factor oscilatorio hace que cada ser "pulse" a su propia frecuencia (vida int
  $$\frac{dE_i}{dt} = -\mu$$ 
 La energía se consume simplemente por existir. No hay forma de recargarla desde afuera: cada ser tiene un tiempo de vida acotado desde el nacimiento.
 
-### Ciclo de vida
+### Ciclo de vida explícito (Enfoque B, v06)
 
-NACIMIENTO: fluctuación aleatoria en el vacío
-→ nuevo ser con E_i = E_0
+A diferencia del ciclo emergente de Gray-Scott, estas etapas **están programadas**
+como reglas sobre la energía individual:
 
-EXISTENCIA: el ser inyecta su Gaussiana térmica en el campo T
-su "cuerpo" es visible mientras E_i > 0
-
-METABOLISMO: E_i decrece a tasa μ en cada paso de tiempo
-el ser pulsa, se mueve por deriva + ruido
-
-REPRODUCCIÓN: si E_i > 2·E_0 → se divide en dos seres
-(el campo recibe dos cuerpos más pequeños)
-
-MUERTE: cuando E_i ≤ 0 → el ser se elimina
-deja de inyectar calor → su cuerpo se disipa
-(el vacío absorbe el calor residual por λ·T)
+- **NACIMIENTO** — fluctuación aleatoria en el vacío → nuevo ser con $E_i = E_0$ - **EXISTENCIA** — el ser inyecta su gaussiana térmica en el campo $T$; su "cuerpo" es visible mientras $E_i > 0$ - **METABOLISMO** — $E_i$ decrece a tasa $\mu$ en cada paso de tiempo; el ser pulsa, se mueve por deriva + ruido
+- **REPRODUCCIÓN** — si $E_i > 2E_0$ → se divide en dos seres (el campo recibe dos cuerpos más pequeños)
+- **MUERTE** — cuando $E_i \leq 0$ → el ser se elimina; deja de inyectar calor → su cuerpo se disipa (el vacío absorbe el calor residual por $\lambda T$)
 
 ### Diferencia fundamental con los enfoques anteriores
 
@@ -402,8 +379,7 @@ de los seres: dibujar una brasa crea un gradiente, y los fríos lo escalan.
 
 Borges describe un cosmos, no una grilla. La geometría rectangular de los primeros modelos es una conveniencia numérica, no una decisión física. En v07 el universo es una **esfera**:
 
-- El ray marching intersecta el rayo con la esfera en lugar del cubo ($\mathbf{r}^2 = R^2$)
-- Los seres rebotan en la pared esférica con reflexión especular: $\mathbf{v}' = \mathbf{v} - 2(\mathbf{v}\cdot\hat{n})\hat{n}$ - Desde afuera se ve una **bola de plasma** (naranja/cian según tipo) con *rim glow* en el borde
+- El ray marching intersecta el rayo con la esfera en lugar del cubo: $|\mathbf{r}|^2 = R^2$ - Los seres rebotan en la pared esférica con reflexión especular: $\mathbf{v}' = \mathbf{v} - 2(\mathbf{v}\cdot\hat{n})\hat{n}$ - Desde afuera se ve una **bola de plasma** (naranja/cian según tipo) con *rim glow* en el borde
 - El vacío es negro puro; sin seres la esfera se oscurece completamente
 
 ### Doble perspectiva: dios e individuo
@@ -476,12 +452,14 @@ Donde el laplaciano discreto es:
 
  $$\nabla^2 f_{i,j} = f_{i+1,j} + f_{i-1,j} + f_{i,j+1} + f_{i,j-1} - 4 f_{i,j}$$ 
 Condición de estabilidad numérica (von Neumann):
+
  $$\Delta t \leq \frac{\Delta x^2}{4 \max(D_u, D_v)}$$ 
 Con $\Delta x = 1$, $D_u = 0.21$, $D_v = 0.05$: $\Delta t \leq 1.19$. Se usa $\Delta t = 1$.
 
 ### Colormap
 
- $v \in [0, 1]$ se mapea a color:
+La concentración $v \in [0, 1]$ se mapea a color:
+
 - $v \approx 0$: negro/azul profundo (vacío cósmico, solo sustrato)
 - $v \approx 0.3$: azul violáceo (organismo naciente)
 - $v \approx 0.6$: naranja (organismo activo)
@@ -508,10 +486,13 @@ El campo 3D $T(x,y,z)$ no puede visualizarse directamente: es un objeto 4D (tres
 
 La función de transferencia convierte temperatura a emisión luminosa:
 
- $$T > 0: \text{rojo} \to \text{naranja} \to \text{blanco} \quad (\text{calor})$$  $$T < 0: \text{azul} \to \text{teal} \to \text{cyan} \quad (\text{frío})$$  $$T \approx 0: \text{transparente} \quad (\text{vacío cósmico})$$ 
+ $$T > 0: \text{rojo} \to \text{naranja} \to \text{blanco} \quad (\text{calor})$$ 
+ $$T < 0: \text{azul} \to \text{teal} \to \text{cyan} \quad (\text{frío})$$ 
+ $$T \approx 0: \text{transparente} \quad (\text{vacío cósmico})$$ 
 La composición front-to-back acumula contribuciones a lo largo del rayo:
 
- $$C_{\text{out}} = C_{\text{in}} + (1-\alpha_{\text{in}}) \cdot \sigma \cdot C_{\text{voxel}}$$  $$\alpha_{\text{out}} = \alpha_{\text{in}} + (1-\alpha_{\text{in}}) \cdot \sigma$$ 
+ $$C_{\text{out}} = C_{\text{in}} + (1-\alpha_{\text{in}}) \cdot \sigma \cdot C_{\text{voxel}}$$ 
+ $$\alpha_{\text{out}} = \alpha_{\text{in}} + (1-\alpha_{\text{in}}) \cdot \sigma$$ 
 donde $\sigma$ es el coeficiente de extinción proporcional a $|T|$.
 
 ---
@@ -530,6 +511,7 @@ donde $\tau \in [0, N]$ indexa los últimos $N$ frames guardados. Este es un obj
 ### Lo que se ve
 
 Un ser que vive durante $F$ frames no es un punto en el espacio — es un **tubo** en el volumen espaciotemporal:
+
 - Tiene inicio (nacimiento) y fin (muerte) en el eje temporal
 - Su diámetro varía con la energía $E_i(t)$ - Si se reproduce, aparece como un **punto de bifurcación**: el tubo se divide en dos
 - Si muere, el tubo termina y el calor residual se difunde radialmente
