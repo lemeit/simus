@@ -3,13 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1A1612" id="metaTheme">
 <title>Seres Térmicos — lemeit</title>
 
-<!-- fallbacks de paleta: solo valen si el theme no carga -->
+<!-- tema antes del render: sin flash -->
+<script>
+  document.documentElement.setAttribute('data-theme',
+    localStorage.getItem('lemeit-theme')||
+    (matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+</script>
+
+<!-- fallbacks de paleta (valores reales del theme; solo valen si el CDN no carga) -->
 <style>
-:root{--lm-bg:#14161a;--lm-surface:#1c1f24;--lm-surface-2:#24272d;--lm-border:#2c3038;
---lm-text:#e8e6e1;--lm-dim:#9a978f;--lm-accent:#ffa14f;--lm-good:#4db6ac;
---lm-moderate:#d9a441;--lm-bad:#e57373}
+:root{--lm-bg:#FAF7F2;--lm-surface:#FFFFFF;--lm-surface-2:#F0EBE2;--lm-border:#E0D9CC;
+--lm-text:#2A211A;--lm-text-dim:#6B5C4E;--lm-accent:#9B3D00;--lm-good:#4C7A3D;
+--lm-moderate:#A6720A;--lm-bad:#A33131}
+[data-theme="dark"]{--lm-bg:#1A1612;--lm-surface:#221E18;--lm-surface-2:#2B241D;
+--lm-border:#3D3028;--lm-text:#F2ECE4;--lm-text-dim:#C9BEB2;--lm-accent:#D9691F;
+--lm-good:#8FB56B;--lm-moderate:#D9A441;--lm-bad:#D9736F}
 </style>
 
 <link rel="stylesheet" href="https://design.lemeit.ar/lemeit-theme.css">
@@ -25,19 +36,28 @@ body{
 .wrap{width:100%;max-width:880px}
 .mono{font-family:'JetBrains Mono',ui-monospace,Consolas,monospace}
 
-/* ---------- header ---------- */
+/* ---------- header + toggle ---------- */
+.overline-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
 .overline{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.28em;
-  color:var(--lm-dim);text-transform:uppercase;margin-bottom:10px}
+  color:var(--lm-text-dim);text-transform:uppercase}
+.toggle{
+  margin-left:auto;display:inline-flex;align-items:center;justify-content:center;
+  width:32px;height:32px;cursor:pointer;
+  color:var(--lm-text-dim);background:var(--lm-surface-2);
+  border:1px solid var(--lm-border);border-radius:6px;user-select:none;
+  transition:border-color .15s,color .15s;
+}
+.toggle:hover{border-color:var(--lm-accent);color:var(--lm-accent)}
 h1{font-size:26px;font-weight:600;letter-spacing:-.01em}
-.lede{margin-top:10px;max-width:640px;color:var(--lm-dim);font-size:14.5px}
+.lede{margin-top:10px;max-width:640px;color:var(--lm-text-dim);font-size:14.5px}
 .epigrafe{
   margin:22px 0 8px;padding:14px 18px;max-width:560px;
   border-left:2px solid var(--lm-accent);background:var(--lm-surface);
-  font-style:italic;font-size:13.5px;color:var(--lm-dim);
+  font-style:italic;font-size:13.5px;color:var(--lm-text-dim);
 }
 .epigrafe cite{display:block;margin-top:8px;font-style:normal;
   font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.14em;
-  color:var(--lm-dim);opacity:.7}
+  color:var(--lm-text-dim);opacity:.7}
 
 /* ---------- líneas ---------- */
 section{margin-top:44px}
@@ -48,7 +68,7 @@ section{margin-top:44px}
 .linea-num{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;
   color:var(--lm-accent);letter-spacing:.06em}
 .linea-nombre{font-size:15px;font-weight:600}
-.linea-pregunta{font-size:12.5px;font-style:italic;color:var(--lm-dim);margin-left:auto;text-align:right}
+.linea-pregunta{font-size:12.5px;font-style:italic;color:var(--lm-text-dim);margin-left:auto;text-align:right}
 
 /* ---------- cards de sims ---------- */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px}
@@ -62,22 +82,22 @@ section{margin-top:44px}
 .ver{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
   color:var(--lm-accent);letter-spacing:.05em}
 .sim-name{font-size:13.5px;font-weight:600}
-.sim-desc{font-size:11.5px;color:var(--lm-dim);line-height:1.55;flex:1}
+.sim-desc{font-size:11.5px;color:var(--lm-text-dim);line-height:1.55;flex:1}
 
 /* chips estilo shields.io: label + valor */
 .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}
 .chip{display:inline-flex;font-family:'JetBrains Mono',monospace;font-size:8.5px;
   border-radius:3px;overflow:hidden;line-height:1.4}
-.chip b{font-weight:500;background:var(--lm-surface-2);color:var(--lm-dim);
+.chip b{font-weight:500;background:var(--lm-surface-2);color:var(--lm-text-dim);
   padding:2px 6px}
 .chip span{padding:2px 6px;background:rgba(77,182,172,.12);color:var(--lm-good)}
 .chip.ln span{background:rgba(255,161,79,.12);color:var(--lm-accent)}
 
 /* ---------- footer ---------- */
 footer{margin-top:56px;padding-top:18px;border-top:1px solid var(--lm-border);
-  font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lm-dim);
+  font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--lm-text-dim);
   display:flex;flex-wrap:wrap;gap:6px 24px}
-footer a{color:var(--lm-dim);text-decoration:none;border-bottom:1px solid var(--lm-border)}
+footer a{color:var(--lm-text-dim);text-decoration:none;border-bottom:1px solid var(--lm-border)}
 footer a:hover{color:var(--lm-accent);border-color:var(--lm-accent)}
 </style>
 </head>
@@ -85,7 +105,10 @@ footer a:hover{color:var(--lm-accent);border-color:var(--lm-accent)}
 <main class="wrap">
 
   <header>
-    <p class="overline">lemeit · física computacional</p>
+    <div class="overline-row">
+      <p class="overline">lemeit · física computacional</p>
+      <button class="toggle" id="themeToggle" type="button" title="cambiar tema" aria-label="cambiar tema"></button>
+    </div>
     <h1>Seres Térmicos</h1>
     <p class="lede">Un texto de Borges convertido en laboratorio de hipótesis físicas:
     cinco líneas de simulación que exploran qué significa ser «un organismo hecho
@@ -199,9 +222,33 @@ footer a:hover{color:var(--lm-accent);border-color:var(--lm-accent)}
 
 </main>
 
-<script src="https://design.lemeit.ar/lemeit-common.js"></script>
 <script>
-  try{ LemeitCommon.initTheme(); }catch(e){ /* la landing funciona sin theme */ }
+/* tema: mismo contrato del sistema (key lemeit-theme + data-theme +
+   evento lemeit-theme-changed), con luna/sol SVG en vez de emoji */
+(function(){
+  const ICONOS={
+    dark:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+    light:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>'
+  };
+  const btn=document.getElementById('themeToggle');
+  const meta=document.getElementById('metaTheme');
+
+  function pintar(){
+    const t=document.documentElement.getAttribute('data-theme');
+    btn.innerHTML=t==='dark'?ICONOS.dark:ICONOS.light;
+    btn.title=t==='dark'?'cambiar a modo día':'cambiar a modo noche';
+    meta.content=t==='dark'?'#1A1612':'#FAF7F2';
+  }
+  pintar();
+
+  btn.addEventListener('click',()=>{
+    const next=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme',next);
+    localStorage.setItem('lemeit-theme',next);   // misma key del sistema
+    pintar();
+    document.dispatchEvent(new CustomEvent('lemeit-theme-changed',{detail:{theme:next}}));
+  });
+})();
 </script>
 </body>
 </html>
