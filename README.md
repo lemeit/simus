@@ -30,6 +30,7 @@ La pregunta que guía este proyecto:
 El primer intento usa la **ecuación del calor**:
 
  $$\frac{\partial T}{\partial t} = \alpha \nabla^2 T$$ 
+
 Esta ecuación describe cómo se difunde el calor en un medio. Es elegante y
 correcta para describir difusión, pero tiene un problema fundamental:
 **es lineal**. Todo sistema regido por ella evoluciona inevitablemente hacia
@@ -127,7 +128,8 @@ entre difusión y reacción:
 - **CRECIMIENTO** — $v$ se expande consumiendo $u$ en su entorno; la velocidad depende de la disponibilidad de alimento
 - **REPRODUCCIÓN** — cuando $v$ crece demasiado, la zona central se agota → la mancha se divide en dos (mitosis química)
 - **COMPETENCIA** — dos manchas compiten por el $u$ disponible entre ellas; si el espacio es limitado, una puede absorber o eliminar a la otra
-- **MUERTE** — cuando el $u$ local cae a cero, $v$ no puede sostenerse; la mancha se disuelve → campo uniforme $u=1,\; v=0$ - **EXTINCIÓN** — si $k$ es demasiado alto o $F$ demasiado bajo, todas las manchas mueren y el sistema llega al equilibrio
+- **MUERTE** — cuando el $u$ local cae a cero, $v$ no puede sostenerse; la mancha se disuelve → campo uniforme $u=1,\; v=0$ 
+- **EXTINCIÓN** — si $k$ es demasiado alto o $F$ demasiado bajo, todas las manchas mueren y el sistema llega al equilibrio
 
 ---
 
@@ -267,7 +269,9 @@ La energía se consume simplemente por existir. No hay forma de recargarla desde
 A diferencia del ciclo emergente de Gray-Scott, estas etapas **están programadas**
 como reglas sobre la energía individual:
 
-- **NACIMIENTO** — fluctuación aleatoria en el vacío → nuevo ser con $E_i = E_0$ - **EXISTENCIA** — el ser inyecta su gaussiana térmica en el campo $T$; su "cuerpo" es visible mientras $E_i > 0$ - **METABOLISMO** — $E_i$ decrece a tasa $\mu$ en cada paso de tiempo; el ser pulsa, se mueve por deriva + ruido
+- **NACIMIENTO** — fluctuación aleatoria en el vacío → nuevo ser con $E_i = E_0$ 
+- **EXISTENCIA** — el ser inyecta su gaussiana térmica en el campo $T$; su "cuerpo" es visible mientras $E_i > 0$ 
+- **METABOLISMO** — $E_i$ decrece a tasa $\mu$ en cada paso de tiempo; el ser pulsa, se mueve por deriva + ruido
 - **REPRODUCCIÓN** — si $E_i > 2E_0$ → se divide en dos seres (el campo recibe dos cuerpos más pequeños)
 - **MUERTE** — cuando $E_i \leq 0$ → el ser se elimina; deja de inyectar calor → su cuerpo se disipa (el vacío absorbe el calor residual por $\lambda T$)
 
@@ -323,6 +327,7 @@ hacia una naturaleza térmica propia, $T_{\text{set}}$. En campo neutro, la ODE
 del cuerpo tiene un único equilibrio:
 
  $$T^* = \frac{k_r}{k_r+\lambda}\,T_{\text{set}} \approx 0.86\,T_{\text{set}} \qquad (k_r = 0.5,\; \lambda = 0.08)$$ 
+
 El nivel del bestiario **no está programado**: se lee de la temperatura media $\bar T$ del cuerpo.
 
 | $\bar T$ | Nivel |
