@@ -1,5 +1,10 @@
 # Seres Térmicos — Documentación del proyecto
 
+[![sitio: profe.lemeit.ar](https://img.shields.io/badge/sitio-profe.lemeit.ar-009688?style=flat-square&labelColor=555555)](https://profe.lemeit.ar/projects/seres-termicos/)
+[![docs: guía física](https://img.shields.io/badge/docs-gu%C3%ADa%20f%C3%ADsica-009688?style=flat-square&labelColor=555555)](https://github.com/lemeit/simus/blob/main/seres-termicos/guia-fisica-cronologica-seres-termicos.md)
+[![versión: V4.6](https://img.shields.io/badge/versi%C3%B3n-V4.6-FF5722?style=flat-square&labelColor=555555)](https://github.com/lemeit/simus/blob/main/seres-termicos/seres_termicos_V4_6.html)
+[![diseño: lemeit](https://img.shields.io/badge/dise%C3%B1o-lemeit-009688?style=flat-square&labelColor=555555)](https://design.lemeit.ar)
+
 Experimento computacional de física y literatura.
 Partida de un texto de Borges; destino: emergencia, vida y muerte en un campo de reacción-difusión.
 
