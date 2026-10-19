@@ -1,22 +1,14 @@
----
-title: "Guía física y cronológica de Seres Térmicos"
-date: 2026-10-16
-slug: "guia-fisica-seres-termicos"
-description: "Ecuaciones, cronología y límites de los simuladores hasta V4.6, con una propuesta de edición visual para redes."
-draft: true
-math: true
-tags: ["física", "simulación", "Seres Térmicos"]
----
-
-<!-- Borrador para Hugo. Cambiar draft a false al publicar. math: true sólo activa las fórmulas si el tema lo admite; el sitio debe tener MathJax o KaTeX configurado. Las ecuaciones usan bloques $$ ... $$ y etiquetas LaTeX. -->
+# Guía física y cronológica de Seres Térmicos
 
 *Modelos implementados hasta V4.6 y propuesta de una edición visual para redes.*
 
-Documento de trabajo para Luciano Lamaita. Corte de revisión: 16 de octubre de 2026.
+Documento de trabajo para Luciano Lamaita. Corte de revisión física: 16 de octubre de 2026. Formato adaptado para GitHub el 19 de octubre de 2026.
+
+[Volver al índice de simulaciones](README.md) · [Borrador original para Hugo](guia-fisica-cronologica-seres-termicos-hugo.md)
 
 El proyecto parte de una imagen literaria de Borges y Guerrero y construye distintas maneras de representar cuerpos hechos de diferencias de temperatura. Esta guía explica qué calcula cada simulador, cómo cambió el modelo y qué límites debe tener su interpretación. La versión actual permite observar intercambio térmico, reservas finitas y una respuesta de control ante amenazas externas; esos mecanismos están programados y no constituyen una demostración de vida emergente.
 
-La base documental principal es el README de la raíz del repositorio simus, contrastado con el código disponible de cada HTML y con las versiones locales recientes. El README dentro de seres-termicos contiene una página HTML de presentación, no el desarrollo científico principal. No se modificó ninguno de esos archivos. Las ecuaciones se incluyen en LaTeX para su representación matemática en el sitio.
+La base documental principal es el README de la raíz del repositorio simus, contrastado con el código disponible de cada HTML y con las versiones locales recientes. El [README de esta carpeta](README.md) contiene el índice de simulaciones. Esta edición utiliza bloques matemáticos de GitHub, con cada ecuación separada y numerada; la copia para Hugo conserva los metadatos originales.
 
 La numeración v01 a v08 y la serie V4.1 a V4.6 pertenecen a etapas y ramas distintas. v04-grayscott no es V4.4. La cronología que sigue respeta el recorrido de versiones recuperado; no atribuye fechas de creación que no puedan confirmarse con un historial de cambios.
 
@@ -28,15 +20,19 @@ Los capítulos 1 a 3 establecen el lenguaje y el mapa del proyecto. Los capítul
 
 ### Temperatura relativa y calor
 
-$$
-\theta=\frac{T-T_a}{\Delta T_{ref}}\tag{01}
-$$
+**Ecuación (01)**
+
+```math
+\theta=\frac{T-T_a}{\Delta T_{ref}}
+```
 
 T es temperatura absoluta, Tₐ es la referencia ambiental y ΔTref fija una escala. En los simuladores recientes θ es una variable adimensional. Un valor negativo significa más frío que el ambiente, no una temperatura absoluta negativa. El código abrevia esta idea como θ = T − Tₐ al trabajar con escala unitaria.
 
-$$
-H=\sum_{c} c_v\theta_c\Delta V+\sum_{i,k}C\theta_{i,k}\tag{02}
-$$
+**Ecuación (02)**
+
+```math
+H=\sum_{c} c_v\theta_c\Delta V+\sum_{i,k}C\theta_{i,k}
+```
 
 H es el exceso de calor sensible normalizado respecto de la referencia, con capacidad volumétrica cᵥ y capacidades C de los órganos. En V4.6 se toma cᵥ = 1. H puede ser negativo porque se mide respecto de un estado de referencia; no es una reserva utilizable de energía negativa.
 
@@ -72,21 +68,27 @@ El bestiario B1 no es simplemente el siguiente número después de v08. Explora 
 
 ## 3 Base común de difusión y conducción
 
-$$
-\mathbf{q}=-k_{th}\nabla T\tag{03}
-$$
+**Ecuación (03)**
+
+```math
+\mathbf{q}=-k_{th}\nabla T
+```
 
 La ley de Fourier relaciona el flujo de calor por unidad de área con el gradiente de temperatura. kₜₕ es conductividad y no debe confundirse con la variable k de muerte en Gray–Scott ni con un coeficiente numérico de difusión.
 
-$$
-\rho c_p\frac{\partial T}{\partial t}=k_{th}\nabla^2T+Q_v\tag{04}
-$$
+**Ecuación (04)**
+
+```math
+\rho c_p\frac{\partial T}{\partial t}=k_{th}\nabla^2T+Q_v
+```
 
 La conservación local de energía más Fourier da la ecuación del calor para un medio homogéneo, isotrópico y sin advección. Qᵥ es potencia por volumen. Su formulación presupone un medio con capacidad térmica; el campo no representa calor viajando por un vacío físico sin materia.
 
-$$
-\frac{\partial\theta}{\partial t}=\alpha\nabla^2\theta-\lambda\theta+Q\tag{05}
-$$
+**Ecuación (05)**
+
+```math
+\frac{\partial\theta}{\partial t}=\alpha\nabla^2\theta-\lambda\theta+Q
+```
 
 La difusividad es α = kₜₕ/(ρcₚ). El término −λθ, cuando existe, modela relajación hacia un ambiente y tiene que explicarse como intercambio externo. No es una propiedad universal de la ecuación del calor.
 
@@ -94,15 +96,19 @@ Sin fuentes, el campo se suaviza. Con borde a temperatura fija, tiende a la refe
 
 ### La escala espacial y el paso de tiempo
 
-$$
-r=\frac{\alpha\Delta t}{h^2},\qquad r\leq\frac{1}{2d}\tag{06}
-$$
+**Ecuación (06)**
+
+```math
+r=\frac{\alpha\Delta t}{h^2},\qquad r\leq\frac{1}{2d}
+```
 
 Para el esquema explícito con vecinos ortogonales, una malla isotrópica y difusión pura, d es la dimensión espacial: r ≤ 1/4 en 2D y r ≤ 1/6 en 3D. La reacción, el control y los demás términos pueden imponer restricciones adicionales; este límite no certifica por sí solo todo el simulador.
 
-$$
-\theta_c^{n+1}=\theta_c^n+r(\sum_{j\in N(c)}\theta_j^n-2d\theta_c^n)\tag{07}
-$$
+**Ecuación (07)**
+
+```math
+\theta_c^{n+1}=\theta_c^n+r(\sum_{j\in N(c)}\theta_j^n-2d\theta_c^n)
+```
 
 El stencil usa cuatro vecinos en 2D y seis en 3D, más la celda central. Al cambiar resolución, deben actualizarse h y los subpasos para conservar el mismo problema físico. Un deslizador llamado α en un prototipo antiguo puede controlar directamente r o una versión reescalada, no una difusividad calibrada en unidades SI.
 
@@ -110,25 +116,31 @@ El stencil usa cuatro vecinos en 2D y seis en 3D, más la celda central. Al camb
 
 ### v01 Difusión con fuentes móviles
 
-$$
-Q_i(\mathbf{x},t)=A_i(t)\exp(-\frac{|\mathbf{x}-\mathbf{x}_i|^2}{2\sigma_i^2})\tag{08}
-$$
+**Ecuación (08)**
+
+```math
+Q_i(\mathbf{x},t)=A_i(t)\exp(-\frac{|\mathbf{x}-\mathbf{x}_i|^2}{2\sigma_i^2})
+```
 
 Una gaussiana representa el aporte de un agente. σᵢ controla el ancho y Aᵢ puede ser positivo o negativo. Es una fuente impuesta: no prueba la existencia de un cuerpo material que conserve la energía que emite.
 
 index.html usa una grilla 220 × 160, coeficiente de stencil 0.22, amortiguación multiplicativa 0.994 y tres pasos por cuadro. Sus cinco agentes se trasladan por velocidades prescritas, rebotan y modulan sus fuentes con una sinusoide. La implementación copia celdas vecinas en el borde para aproximar flujo nulo. Las fuentes se acumulan sobre un campo persistente.
 
-$$
-\theta^{n+1}=p(\theta^n+rL\theta^n),\qquad \lambda_{ef}=-\frac{\ln p}{\Delta t}\tag{09}
-$$
+**Ecuación (09)**
+
+```math
+\theta^{n+1}=p(\theta^n+rL\theta^n),\qquad \lambda_{ef}=-\frac{\ln p}{\Delta t}
+```
 
 El factor p = 0.994 equivale a una tasa de relajación sólo después de definir Δt. Como varios prototipos avanzan una cantidad fija de pasos por cuadro, su velocidad física puede cambiar con los fps. Esto debe corregirse o declararse al comparar grabaciones.
 
 ### v02 Respuesta al gradiente
 
-$$
-\frac{d\mathbf{v}_i}{dt}=-s_i\chi\nabla\theta(\mathbf{x}_i)-\gamma\mathbf{v}_i+\mathbf{f}_{centro}+\boldsymbol{\xi}\tag{10}
-$$
+**Ecuación (10)**
+
+```math
+\frac{d\mathbf{v}_i}{dt}=-s_i\chi\nabla\theta(\mathbf{x}_i)-\gamma\mathbf{v}_i+\mathbf{f}_{centro}+\boldsymbol{\xi}
+```
 
 sᵢ es la polaridad del ser. El código añade una atracción débil al centro, ruido, amortiguación, velocidad máxima y rebotes. La regla de movimiento se elige como hipótesis; Fourier explica la conducción, no determina que un organismo persiga o evite una temperatura.
 
@@ -142,13 +154,17 @@ test_3D verifica la capacidad gráfica. v03 agrega una textura tridimensional y 
 
 ### v04 Gray Scott
 
-$$
-\frac{\partial u}{\partial t}=D_u\nabla^2u-uv^2+F(1-u)\tag{11}
-$$
+**Ecuación (11)**
 
-$$
-\frac{\partial v}{\partial t}=D_v\nabla^2v+uv^2-(F+k)v\tag{12}
-$$
+```math
+\frac{\partial u}{\partial t}=D_u\nabla^2u-uv^2+F(1-u)
+```
+
+**Ecuación (12)**
+
+```math
+\frac{\partial v}{\partial t}=D_v\nabla^2v+uv^2-(F+k)v
+```
 
 u es sustrato y v es producto autocatalítico. El término uv² transforma sustrato en producto; F repone el sustrato y F + k retira producto. El sistema está abierto. Interpretar sus manchas como organismos es una analogía visual, no una identidad física con temperatura.
 
@@ -160,13 +176,17 @@ El estado uniforme u = 1, v = 0 es una solución exacta. Sin semilla, ruido o pe
 
 ### v05 FitzHugh Nagumo
 
-$$
-\frac{\partial u}{\partial t}=D_u\nabla^2u+u-\frac{u^3}{3}-v\tag{13}
-$$
+**Ecuación (13)**
 
-$$
-\frac{\partial v}{\partial t}=\varepsilon(u+\beta-\gamma v)\tag{14}
-$$
+```math
+\frac{\partial u}{\partial t}=D_u\nabla^2u+u-\frac{u^3}{3}-v
+```
+
+**Ecuación (14)**
+
+```math
+\frac{\partial v}{\partial t}=\varepsilon(u+\beta-\gamma v)
+```
 
 u es activación rápida y v es recuperación lenta. Esta variante del archivo no difunde v. El término cúbico y la recuperación producen excitabilidad y, en regímenes adecuados, ondas y espirales.
 
@@ -176,29 +196,37 @@ v05 usa Dᵤ = 0.5, Δt = 0.10 y bordes periódicos. Las perturbaciones iniciale
 
 ### v06 Presupuesto energético individual
 
-$$
-Q_i=s_i A\frac{E_i}{E_0}\exp(-\frac{|\mathbf{x}-\mathbf{x}_i|^2}{2\sigma_i^2})[0.70+0.30\sin(\omega_i n+\phi_i)]\tag{15}
-$$
+**Ecuación (15)**
 
-$$
-E_i^{n+1}=E_i^n-0.15\mu\tag{16}
-$$
+```math
+Q_i=s_i A\frac{E_i}{E_0}\exp(-\frac{|\mathbf{x}-\mathbf{x}_i|^2}{2\sigma_i^2})[0.70+0.30\sin(\omega_i n+\phi_i)]
+```
+
+**Ecuación (16)**
+
+```math
+E_i^{n+1}=E_i^n-0.15\mu
+```
 
 La implementación avanza energía por paso discreto, no por un segundo físico calibrado. El código permite nacimientos aleatorios externos y elimina a un ser cuando su E se agota. La amplitud de su fuente disminuye con E/E₀, pero esa emisión no se calcula como el calor exacto que se resta del presupuesto.
 
 Esta etapa introduce individuos contables, gráficas de población y edades. Cada nacimiento inicializa E en el intervalo [0.5E₀, E₀]. La probabilidad de nuevos individuos se ensaya varias veces por paso y depende del control de nacimientos, sin un reservorio global finito. Se trata de un mecanismo de creación prescrito, no de una fluctuación cuántica del vacío.
 
-$$
-E_i>r_{rep}E_0\ \Rightarrow\ E_{padre}=0.6E_0,\quad E_{hijo}=0.4E_0\tag{17}
-$$
+**Ecuación (17)**
+
+```math
+E_i>r_{rep}E_0\ \Rightarrow\ E_{padre}=0.6E_0,\quad E_{hijo}=0.4E_0
+```
 
 La condición de reproducción está escrita, pero con E₀ fijo, rrep ≥ 1.2 y un individuo que nace con E ≤ E₀ y sólo pierde energía, no puede alcanzarse. No hay alimentación que eleve E por encima del umbral. Cambiar E₀ durante la ejecución puede alterar esa comparación, pero eso no constituye reproducción emergente. Esta limitación también alcanza a las extensiones que conservan la misma lógica.
 
 ### v07 Universo visual esférico
 
-$$
-\mathbf{v}^{\prime}=\mathbf{v}-2(\mathbf{v}\cdot\mathbf{n})\mathbf{n}\tag{18}
-$$
+**Ecuación (18)**
+
+```math
+\mathbf{v}^{\prime}=\mathbf{v}-2(\mathbf{v}\cdot\mathbf{n})\mathbf{n}
+```
 
 Se usa reflexión especular para orientar al ser hacia el interior cuando supera el radio de confinamiento. El campo se almacena en una grilla rectangular 64 × 48 × 32 y se actualiza con seis vecinos.
 
@@ -206,9 +234,11 @@ El ray marching corta una esfera y muestra una vista exterior y otra interior de
 
 ### v08 El tiempo como eje del volumen
 
-$$
-\mathcal{T}(x,y,\tau)=\theta(x,y,t_0+\tau\Delta t_{hist})\tag{19}
-$$
+**Ecuación (19)**
+
+```math
+\mathcal{T}(x,y,\tau)=\theta(x,y,t_0+\tau\Delta t_{hist})
+```
 
 El modelo térmico sigue siendo bidimensional. Se guardan cortes sucesivos en una textura 3D; el tercer eje indica tiempo almacenado, no profundidad espacial. Las trayectorias forman tubos de historia o worldtubes.
 
@@ -218,17 +248,21 @@ Un tubo comienza cuando se registra un ser y termina cuando deja de aparecer. La
 
 ### Temperaturas de los órganos
 
-$$
-\frac{d\theta_k}{dt}=A_k\sin(\omega_k t+\phi_k)+\kappa\theta_m+k_r(\theta_{set}-\theta_k)-\lambda_o\theta_k+D_o(\theta_{k-1}+\theta_{k+1}-2\theta_k)\tag{20}
-$$
+**Ecuación (20)**
+
+```math
+\frac{d\theta_k}{dt}=A_k\sin(\omega_k t+\phi_k)+\kappa\theta_m+k_r(\theta_{set}-\theta_k)-\lambda_o\theta_k+D_o(\theta_{k-1}+\theta_{k+1}-2\theta_k)
+```
 
 El latido es externo, κθₘ representa la lectura del campo, kᵣ restaura una temperatura propia y Dₒ acopla órganos vecinos. En el archivo se usan κ = 0.22, kᵣ = 0.5, λₒ = 0.08 y Dₒ = 2.6. Las temperaturas se limitan a [−1.2, 1.2].
 
 Los órganos giran con velocidades angulares y radios modulados; el centro del cuerpo combina termotaxis, oscilaciones de deriva, repulsión y confinamiento. Cada órgano deposita en el medio una fracción de su temperatura mediante splats de distintos radios. Ese retorno al campo hace el acoplamiento bidireccional, pero no es un intercambio conservativo: no se descuenta exactamente del órgano el calor que recibe la grilla.
 
-$$
-\theta^*=\frac{k_r}{k_r+\lambda_o}\theta_{set}\approx0.862\theta_{set}\tag{21}
-$$
+**Ecuación (21)**
+
+```math
+\theta^*=\frac{k_r}{k_r+\lambda_o}\theta_{set}\approx0.862\theta_{set}
+```
 
 Este equilibrio describe una cadena uniforme en medio neutro, sin latido neto y sin otras variaciones. No es la solución instantánea de todo el bestiario acoplado. El campo y las oscilaciones pueden desplazar o hacer oscilar el promedio.
 
@@ -244,9 +278,11 @@ Este equilibrio describe una cadena uniforme en medio neutro, sin latido neto y 
 
 El valor de la temperatura media se calcula; los nombres y sus umbrales están programados. Por eso es correcto decir que el nivel se asigna a partir del estado térmico, pero no que toda la taxonomía emerge sin decisiones del autor.
 
-$$
-\mathbf{a}_{tax}=140[1-2S(0.10,0.70,\bar\theta)]\nabla\theta_m\tag{22}
-$$
+**Ecuación (22)**
+
+```math
+\mathbf{a}_{tax}=140[1-2S(0.10,0.70,\bar\theta)]\nabla\theta_m
+```
 
 S es la interpolación smoothstep del código. La forma de esta respuesta es una elección fenomenológica. A ella se añaden fuerzas sinusoidales, repulsión y rozamiento. El campo crea el gradiente; la regla de conducta determina cómo responde el cuerpo.
 
@@ -274,9 +310,11 @@ V4.2.1 conserva esa física y ajusta la composición a la ventana. Reduce autom�
 
 ### V4.3 Fuentes articuladas sostenidas
 
-$$
-\frac{\partial\theta}{\partial t}=\alpha\nabla^2\theta-0.22\theta+Q(\mathbf{x},t)\tag{23}
-$$
+**Ecuación (23)**
+
+```math
+\frac{\partial\theta}{\partial t}=\alpha\nabla^2\theta-0.22\theta+Q(\mathbf{x},t)
+```
 
 Los órganos prescriben fuentes gaussianas calientes o frías. Se añaden latido y deriva y se mantiene una pérdida al ambiente. La simulación está abierta y no posee todavía una reserva finita individual que se consuma por sostener la forma.
 
@@ -286,47 +324,63 @@ Esta versión muestra cinco estructuras articuladas y permite apagar las fuentes
 
 ### Un solo campo persistente y órganos con capacidad térmica
 
-$$
-\frac{\partial\theta}{\partial t}=\alpha\nabla^2\theta+Q_{org}+Q_{ext}\tag{24}
-$$
+**Ecuación (24)**
 
-$$
-q_{i,k}=G[\theta_{i,k}-\theta_m(\mathbf{x}_{i,k})]\tag{25}
-$$
+```math
+\frac{\partial\theta}{\partial t}=\alpha\nabla^2\theta+Q_{org}+Q_{ext}
+```
 
-$$
-C\frac{d\theta_{i,k}}{dt}=P_{i,k}-q_{i,k}+CD_oL_1\theta_{i,k}\tag{26}
-$$
+**Ecuación (25)**
+
+```math
+q_{i,k}=G[\theta_{i,k}-\theta_m(\mathbf{x}_{i,k})]
+```
+
+**Ecuación (26)**
+
+```math
+C\frac{d\theta_{i,k}}{dt}=P_{i,k}-q_{i,k}+CD_oL_1\theta_{i,k}
+```
 
 Cada órgano tiene una temperatura y una capacidad C. G es conductancia hacia el medio y Dₒ modela conducción interna por una cadena. El signo de q define qué lado entrega calor. La lectura del campo se interpola trilinealmente; el depósito se distribuye mediante un núcleo normalizado.
 
-$$
-\Delta\theta_c=\frac{q_{i,k}\Delta t}{\Delta V}\frac{w_c}{\sum_jw_j},\qquad\Delta\theta_{i,k}=-\frac{q_{i,k}\Delta t}{C}\tag{27}
-$$
+**Ecuación (27)**
+
+```math
+\Delta\theta_c=\frac{q_{i,k}\Delta t}{\Delta V}\frac{w_c}{\sum_jw_j},\qquad\Delta\theta_{i,k}=-\frac{q_{i,k}\Delta t}{C}
+```
 
 La suma del calor agregado a la grilla es qΔt y coincide con lo que pierde el órgano, salvo redondeo Float32. Los pesos gaussianos se normalizan sobre las celdas realmente incluidas, también cerca de un borde.
 
-$$
-q_{ij}=G_{ij}(\bar\theta_i-\bar\theta_j),\qquad G_{ij}=0.00014[\max(0,1-d_{ij}/0.40)]^2\tag{28}
-$$
+**Ecuación (28)**
+
+```math
+q_{ij}=G_{ij}(\bar\theta_i-\bar\theta_j),\qquad G_{ij}=0.00014[\max(0,1-d_{ij}/0.40)]^2
+```
 
 Esta conexión añade conducción efectiva entre cuerpos próximos. A uno se le resta qᵢⱼΔt y al otro se le suma. La conductancia es no negativa y el flujo va hacia menor temperatura. Es un enlace mesoscópico elegido para representar proximidad, no una solución detallada del contacto entre superficies.
 
 ### Control de temperatura y reserva
 
-$$
-\theta^*_{i,k}=s_i[0.70+0.10\sin(1.7a_i+0.6k)](1-\exp(-a_i/1.1))b_i\tag{29}
-$$
+**Ecuación (29)**
 
-$$
-P_{i,k}=Ck_{ctrl}(\theta^*_{i,k}-\theta_{i,k})\tag{30}
-$$
+```math
+\theta^*_{i,k}=s_i[0.70+0.10\sin(1.7a_i+0.6k)](1-\exp(-a_i/1.1))b_i
+```
+
+**Ecuación (30)**
+
+```math
+P_{i,k}=Ck_{ctrl}(\theta^*_{i,k}-\theta_{i,k})
+```
 
 aᵢ es edad, sᵢ es polaridad y bᵢ reduce la consigna cuando se activa ahorro. La ganancia basal es 0.9. El controlador puede añadir calor o extraerlo; en ambos casos consume reserva según |P|. Se limita la energía aplicada en el paso si no alcanza la reserva restante.
 
-$$
-\frac{dE_i}{dt}=-\sum_k|P_{i,k}|-\mu a_{act,i}-P_{esc,i}-D_i\tag{31}
-$$
+**Ecuación (31)**
+
+```math
+\frac{dE_i}{dt}=-\sum_k|P_{i,k}|-\mu a_{act,i}-P_{esc,i}-D_i
+```
 
 En V4.4, aact = 1, Pesc = 0 y D = 0. V4.6 añade ahorro, escape y drenaje externo. El término de mantenimiento se interpreta como trabajo o disipación fuera del campo mostrado. No se ha modelado una máquina frigorífica con temperaturas absolutas y rendimiento de Carnot; el coste de enfriar es una aproximación de presupuesto.
 
@@ -334,13 +388,17 @@ En V4.4, aact = 1, Pesc = 0 y D = 0. V4.6 añade ahorro, escape y drenaje extern
 
 El estado inicial contiene seis cuerpos tridimensionales, con siete órganos cada uno. Son condiciones iniciales con edad y temperatura propias; no se presentan como seis fluctuaciones espontáneas del vacío. Los nacimientos posteriores transfieren E₀ de la reserva común a un ser nuevo. La geometría se desarrolla con la edad mediante una función suave; esa anatomía está programada.
 
-$$
-g(a)=0.25+0.75[1-\exp(-a/2.2)]\tag{32}
-$$
+**Ecuación (32)**
 
-$$
-E_i\leq0\ \Rightarrow\ P_{i,k}=0\tag{33}
-$$
+```math
+g(a)=0.25+0.75[1-\exp(-a/2.2)]
+```
+
+**Ecuación (33)**
+
+```math
+E_i\leq0\ \Rightarrow\ P_{i,k}=0
+```
 
 El ser deja de mantener sus temperaturas, pero los órganos continúan intercambiando calor pasivamente. El individuo se retira cuando lleva al menos 3 unidades de tiempo extinguido y todos sus órganos tienen |θ| < 0.08. Antes de quitarlo se deposita en el medio el calor que aún almacena. La difusión del campo continúa después de desaparecer la identidad individual.
 
@@ -350,31 +408,41 @@ La muerte es un criterio sobre la reserva y la pérdida de identidad es otro cri
 
 ### Traslación en un baño externo
 
-$$
-d\mathbf{v}_i=(-\gamma\mathbf{v}_i-s_i\chi\nabla\theta+\mathbf{a}_{esc,i})dt+\sigma d\mathbf{W}_t\tag{34}
-$$
+**Ecuación (34)**
 
-$$
-\frac{d\mathbf{x}_i}{dt}=\mathbf{v}_i\tag{35}
-$$
+```math
+d\mathbf{v}_i=(-\gamma\mathbf{v}_i-s_i\chi\nabla\theta+\mathbf{a}_{esc,i})dt+\sigma d\mathbf{W}_t
+```
+
+**Ecuación (35)**
+
+```math
+\frac{d\mathbf{x}_i}{dt}=\mathbf{v}_i
+```
 
 La velocidad combina rozamiento, una termorrespuesta elegida, agitación estocástica y, en V4.6, escape activo. La posición tiene tres coordenadas. El ruido representa un baño externo; no se ha derivado una relación de fluctuación disipación calibrada con masa y temperatura absoluta.
 
-$$
-f=\exp(-\gamma\Delta t),\qquad\sigma_v=\sigma\sqrt{\frac{1-f^2}{2\gamma}}\tag{36}
-$$
+**Ecuación (36)**
+
+```math
+f=\exp(-\gamma\Delta t),\qquad\sigma_v=\sigma\sqrt{\frac{1-f^2}{2\gamma}}
+```
 
 El código integra exactamente el factor de rozamiento y la varianza del ruido para un paso con fuerza congelada, y actualiza la posición numéricamente. No resuelve hidrodinámica, presión, flotación ni Navier–Stokes. Los rebotes de frontera multiplican la componente de velocidad por −0.8, así que tampoco son colisiones elásticas de un gas molecular.
 
 ### La amenaza térmica
 
-$$
-Q_{ext}=-\kappa_{ext}w(\mathbf{x}-\mathbf{X}_{ext})(\theta-\theta_{ext})\tag{37}
-$$
+**Ecuación (37)**
 
-$$
-\theta^{n+1}=\theta_{ext}+(\theta^n-\theta_{ext})\exp(-\kappa_{ext}w\Delta t)\tag{38}
-$$
+```math
+Q_{ext}=-\kappa_{ext}w(\mathbf{x}-\mathbf{X}_{ext})(\theta-\theta_{ext})
+```
+
+**Ecuación (38)**
+
+```math
+\theta^{n+1}=\theta_{ext}+(\theta^n-\theta_{ext})\exp(-\kappa_{ext}w\Delta t)
+```
 
 Es un baño localizado, no una criatura ni un halo decorativo. El centro sigue una trayectoria externa prescrita. La actualización exponencial evita inestabilidad por relajación y se registra el calor firmado que aporta o retira del medio.
 
@@ -382,37 +450,49 @@ En V4.6 dura 14 unidades de tiempo; su ancho gaussiano es 0.13, θext = −sobje
 
 ### El sifón de reserva
 
-$$
-D_i=0.00035 I\exp(-\frac{|\mathbf{x}_i-\mathbf{X}_{ext}|^2}{2(0.24)^2})\tag{39}
-$$
+**Ecuación (39)**
+
+```math
+D_i=0.00035 I\exp(-\frac{|\mathbf{x}_i-\mathbf{X}_{ext}|^2}{2(0.24)^2})
+```
 
 I es intensidad. El sifón extrae presupuesto disponible, no calor directamente. La cantidad retirada se registra en una cuenta externa y nunca se deja E por debajo de cero. Alejarse reduce el drenaje por la caída espacial de la gaussiana.
 
 ### Detección respuesta y ahorro
 
-$$
-z_T=\min(1,\frac{\max(0,-s_i\theta_m)}{0.15}),\qquad z_D=\exp(-\frac{d_i^2}{2R^2})\tag{40}
-$$
+**Ecuación (40)**
+
+```math
+z_T=\min(1,\frac{\max(0,-s_i\theta_m)}{0.15}),\qquad z_D=\exp(-\frac{d_i^2}{2R^2})
+```
 
 z es una señal de amenaza: para el frente se mide la temperatura opuesta a la polaridad; para el sifón se usa proximidad. Se activa la alarma cuando z > 0.12. Es un criterio de control diseñado, no un órgano sensorial emergente.
 
-$$
-u_i=\min(1,\frac{E_i/E_{0,i}}{0.32}),\qquad a_{act,i}=0.35+0.65u_i\tag{41}
-$$
+**Ecuación (41)**
 
-$$
-b_i=0.45+0.55u_i\tag{42}
-$$
+```math
+u_i=\min(1,\frac{E_i/E_{0,i}}{0.32}),\qquad a_{act,i}=0.35+0.65u_i
+```
+
+**Ecuación (42)**
+
+```math
+b_i=0.45+0.55u_i
+```
 
 Con respuesta adaptativa y reserva menor al 32%, se reduce el mantenimiento y la magnitud de la temperatura objetivo. Si bajar la consigna obligara a gastar energía activamente en el sentido contrario de la polaridad, el código suprime esa potencia y deja que el intercambio pasivo reduzca el contraste. Sin respuesta adaptativa, actividad y consigna conservan sus valores basales.
 
-$$
-|\mathbf{a}_{esc}|\leq0.22\min(1,z)\sqrt{a_{act}}\tag{43}
-$$
+**Ecuación (43)**
 
-$$
-P_{esc}=\frac{0.001|\mathbf{a}_{esc}\cdot\mathbf{v}|}{0.3}+0.000003\tag{44}
-$$
+```math
+|\mathbf{a}_{esc}|\leq0.22\min(1,z)\sqrt{a_{act}}
+```
+
+**Ecuación (44)**
+
+```math
+P_{esc}=\frac{0.001|\mathbf{a}_{esc}\cdot\mathbf{v}|}{0.3}+0.000003
+```
 
 Cuando hay alarma y una amenaza localizada, la aceleración apunta desde el centro de esa perturbación hacia afuera. La ganancia térmica sube de 0.9 a 1.8. El coste mecánico se suma al mantenimiento y se debita de la reserva; el término basal se aplica durante la alarma. Es una estimación de coste dentro de un modelo activo abierto, no un cierre de toda la energía mecánica del baño.
 
@@ -447,17 +527,21 @@ Estos parámetros son adimensionales o efectivos. Para asignar metros, segundos,
 
 ### Balance de reserva
 
-$$
-R_E=E_{ext}-R-\sum_iE_i-E_{gastada}-E_{retirada}\tag{45}
-$$
+**Ecuación (45)**
+
+```math
+R_E=E_{ext}-R-\sum_iE_i-E_{gastada}-E_{retirada}
+```
 
 R es reserva común. Los nacimientos transfieren presupuesto entre R y Eᵢ. La recarga aumenta Eext y R por igual; los gastos aumentan Egastada; el sifón y la extinción impuesta aumentan Eretirada. Un R_E próximo a cero comprueba esa contabilidad, no la segunda ley completa.
 
 ### Balance de calor
 
-$$
-R_H=H-H_0-A+B-Q_{ext,acum}\tag{46}
-$$
+**Ecuación (46)**
+
+```math
+R_H=H-H_0-A+B-Q_{ext,acum}
+```
 
 A acumula el calor firmado del controlador, B el calor firmado que salió por las fronteras y Qext,acum el aporte firmado del baño externo. El intercambio entre órganos y medio y el contacto entre seres se cancelan internamente. Un R_H pequeño comprueba que no se pierde calor al depositarlo o retirar órganos.
 
@@ -465,15 +549,19 @@ En los ensayos de desarrollo de V4.6, los residuos de reserva estuvieron cerca d
 
 ## 12 Entropía y límites de la interpretación termodinámica
 
-$$
-\frac{dS}{dt}=\dot S_e+\dot S_i,\qquad\dot S_i\geq0\tag{47}
-$$
+**Ecuación (47)**
+
+```math
+\frac{dS}{dt}=\dot S_e+\dot S_i,\qquad\dot S_i\geq0
+```
 
 El balance de entropía de un sistema abierto separa intercambio con el entorno y producción interna. En régimen estacionario, ambos términos pueden compensarse. La desigualdad del README que exige exportar siempre más entropía de la que se produce no es una condición general para que exista una estructura disipativa [R1](#r1).
 
-$$
-\dot S_{prod}=q_{ij}(\frac{1}{T_j}-\frac{1}{T_i})=G_{ij}\frac{(T_i-T_j)^2}{T_iT_j}\geq0\tag{48}
-$$
+**Ecuación (48)**
+
+```math
+\dot S_{prod}=q_{ij}(\frac{1}{T_j}-\frac{1}{T_i})=G_{ij}\frac{(T_i-T_j)^2}{T_iT_j}\geq0
+```
 
 Esta expresión usa temperaturas absolutas positivas y una conductancia positiva. No debe evaluarse con θ negativa o con 1/θ. Ilustra por qué el intercambio conductivo tiene el signo físico correcto [R4](#r4).
 
@@ -491,25 +579,33 @@ El orden de V4.6 es difusión, actualización de la amenaza, órganos y movimien
 
 ### Ray marching y emisión por vóxeles
 
-$$
-a=1-\exp(-\sigma_{opt}\Delta\ell)\tag{49}
-$$
+**Ecuación (49)**
 
-$$
-\mathbf{C}^{\prime}=\mathbf{C}+(1-A)a\mathbf{c},\qquad A^{\prime}=A+(1-A)a\tag{50}
-$$
+```math
+a=1-\exp(-\sigma_{opt}\Delta\ell)
+```
+
+**Ecuación (50)**
+
+```math
+\mathbf{C}^{\prime}=\mathbf{C}+(1-A)a\mathbf{c},\qquad A^{\prime}=A+(1-A)a
+```
 
 V4.1 a V4.3 recorren muestras a lo largo del rayo y componen color y absorción. a es opacidad de un tramo, mientras σopt es un coeficiente de extinción; no son la misma magnitud. La paleta y la iluminación son ilustrativas, no una solución de radiación térmica de cuerpo negro.
 
 V4.4 a V4.6 sustituyen ese recorrido por la proyección de vóxeles activos con núcleos suaves y suma aditiva, como emisión ópticamente delgada. Es más ligera, pero no resuelve sombras, absorción ni oclusión física. La malla parecida a un teseracto que se ve con zoom procede de la grilla y de su reconstrucción gráfica; no indica cuatro dimensiones físicas.
 
-$$
-b=\mathrm{round}[128+127\,\mathrm{clamp}(\theta/0.125,-1,1)]\tag{51}
-$$
+**Ecuación (51)**
 
-$$
-\theta_{tex}=0.125\frac{b-128}{127}\tag{52}
-$$
+```math
+b=\mathrm{round}[128+127\,\mathrm{clamp}(\theta/0.125,-1,1)]
+```
+
+**Ecuación (52)**
+
+```math
+\theta_{tex}=0.125\frac{b-128}{127}
+```
 
 La textura R8 tiene un byte por celda. El cero se codifica exactamente en 128 y el error máximo de redondeo dentro del rango es aproximadamente 0.000492. La saturación afecta sólo a la imagen, no al campo Float32. La transferencia de color usa una referencia fija de ±0.02 y la selección de muestras activas descarta visualmente |θ| ≤ 0.0008; el corte científico conserva la lectura del dato.
 
@@ -541,7 +637,7 @@ Las verificaciones de desarrollo incluyeron difusión de un impulso no negativo,
 
 ## 15 Matices y correcciones propuestos para el README
 
-Esta sección propone cambios de redacción y alcance para una revisión futura. No modifica el README ni publica nada en GitHub.
+Esta sección conserva las observaciones de la revisión física del 16 de octubre. El índice de simulaciones de esta carpeta se corrigió y las versiones V4.1 a V4.6 se publicaron posteriormente, el 19 de octubre de 2026.
 
 - Reemplazar “la física que produce vida” por una descripción de patrones de reacción difusión. Dividir una mancha no equivale a demostrar reproducción biológica.
 
@@ -640,7 +736,7 @@ La grabación de video necesitaría una función de captura del canvas y composi
 
 **P2.** Código de los primeros simuladores en el [repositorio simus](https://github.com/lemeit/simus). Archivos revisados: `index.html`, `v02-gradiente.html`, `test_3D.html`, `v03-raymarching.html`, `v04-grayscott.html`, `v05-fhn.html`, `v06-ciclovida.html`, `v07-3d.html`, `v08-espaciotiempo.html`, `bestiario.html`.
 
-**P3.** Archivo `seres_termicos_V4_1.html` aportado para la revisión y versiones locales V4.2, V4.2.1, V4.3, V4.4, V4.5 y V4.6. Se contrastaron ecuaciones, parámetros, balances y cambios de render. Los ensayos de desarrollo de las versiones recientes respaldan las verificaciones descritas. Estas versiones locales no se publicaron en GitHub durante la preparación de esta guía.
+**P3.** Archivo `seres_termicos_V4_1.html` aportado para la revisión y versiones locales V4.2, V4.2.1, V4.3, V4.4, V4.5 y V4.6. Se contrastaron ecuaciones, parámetros, balances y cambios de render. Los ensayos de desarrollo de las versiones recientes respaldan las verificaciones descritas. Estas versiones aún eran locales durante la preparación original de la guía. Desde el 19 de octubre de 2026 están disponibles en el [índice de simulaciones](README.md).
 
 **P4.** [Sitio de Seres Térmicos](https://profe.lemeit.ar/projects/seres-termicos/) y [repositorio público indicado por el autor](https://github.com/lemeit/simus). La documentación literaria se conserva como referencia del README; no se cotejaron en esta revisión las ediciones originales ni todas las atribuciones bibliográficas a Steiner.
 
@@ -662,4 +758,4 @@ La grabación de video necesitaría una función de captura del canvas y composi
 
 **R4.** Neville Hogan. Heat Transfer and the Second Law. MIT OpenCourseWare, curso 2.141 de 2006. Material docente primario sobre conducción, signo del flujo y producción de entropía: https://ocw.mit.edu/courses/2-141-modeling-and-simulation-of-dynamic-systems-fall-2006/5b5774760fca05d98c89ba06b88808d0_heat_transfer.pdf
 
-Las referencias científicas explican marcos generales; no validan automáticamente estos parámetros, esta implementación ni una equivalencia entre los agentes y la vida biológica. El documento registra un estado de desarrollo, con un preset visual propuesto y sin modificación ni publicación de archivos del repositorio.
+Las referencias científicas explican marcos generales; no validan automáticamente estos parámetros, esta implementación ni una equivalencia entre los agentes y la vida biológica. El contenido físico registra el estado revisado el 16 de octubre de 2026, con un preset visual propuesto. Esta edición adapta su presentación a GitHub y actualiza las notas sobre la publicación de los archivos, sin cambiar las ecuaciones.
