@@ -5,7 +5,9 @@
 [![relato: Acto XIV](https://img.shields.io/badge/relato-Acto%20XIV-FF5722?style=flat-square&labelColor=555555)](https://github.com/lemeit/simus/blob/main/seres-termicos/seres_termicos_V4_6.html)
 [![diseño: lemeit](https://img.shields.io/badge/dise%C3%B1o-lemeit-009688?style=flat-square&labelColor=555555)](https://design.lemeit.ar)
 
-Laboratorio de simulación inspirado en los seres de temperaturas cambiantes de Borges y Guerrero. El proyecto explora difusión térmica, patrones de reacción-difusión y organismos activos con órganos, reservas finitas y respuesta a perturbaciones.
+A partir de «Los seres térmicos», de Jorge Luis Borges y Margarita Guerrero, este proyecto explora el encuentro entre literatura, física y simulación. La imagen de seres hechos de temperaturas cambiantes abre una pregunta: ¿cómo representar esas formas y qué leyes o hipótesis podrían sostenerlas?
+
+[Leer «Los seres térmicos» en *El libro de los seres imaginarios* (PDF, página 62)](https://tavapy.gov.py/biblioteca/wp-content/uploads/2023/01/BorgesJ-El-libro-de-los-seres-imaginarios.pdf#page=62). Texto de Borges y Margarita Guerrero, disponible en la biblioteca digital de la Municipalidad de Tavapy.
 
 ## Empezar por el Prólogo
 
