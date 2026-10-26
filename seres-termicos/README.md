@@ -7,11 +7,13 @@
 
 Laboratorio de simulación inspirado en los seres de temperaturas cambiantes de Borges y Guerrero. El proyecto explora difusión térmica, patrones de reacción-difusión y organismos activos con órganos, reservas finitas y respuesta a perturbaciones.
 
-## Empezar desde cero: versión 00
+## Empezar desde cero: contacto térmico
 
-[00 — Una recta de temperaturas](v00-temperatura.html) es el punto de entrada para secundaria: una barra de un metro, dos temperaturas de extremo y una gráfica de posición X frente a temperatura Y. Usa la recta `T(x) = T_izq + (T_der − T_izq) · x/L` con `L = 1 m`, una tabla de valores y tres preguntas. Sin animación, WebGL ni dependencias; funciona sin conexión.
+**[00 — Dos cuerpos en contacto](v00-contacto-termico.html)** es el primer experimento animado para secundaria. Dos cuerpos a distinta temperatura intercambian energía; la escena, las curvas T(t), la potencia en watts y el calor transferido en joules muestran el mismo estado físico. Se pueden separar, pausar, reiniciar y comparar masas. Modelo macroscópico con temperaturas uniformes y energía conservada, sin pérdidas al ambiente.
 
-Es la solución estacionaria para una barra homogénea sin fuentes internas ni pérdidas laterales, con extremos mantenidos por reservorios. No muestra cómo llega a ese estado. El orden didáctico empieza aquí; la numeración histórica de las demás versiones se conserva.
+La [hoja de ruta de termodinámica](recorrido-termodinamica.md) organiza el avance desde equilibrio y calorimetría hasta las leyes de la termodinámica y la difusión 1D, 2D y 3D en el tiempo. Distingue los recursos disponibles de los próximos simuladores propuestos.
+
+La [recta de temperaturas](v00-temperatura.html) se conserva como complemento: muestra un perfil estacionario en una barra, con posición en X y temperatura en Y. En el nuevo experimento, X es tiempo y Y es temperatura. Ambos HTML funcionan sin servidor, sin WebGL y sin conexión.
 
 ## Empezar por la versión actual
 
