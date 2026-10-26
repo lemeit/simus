@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>El calor deja una huella — Seres Térmicos</title>
+<style>
+:root{color-scheme:light;--bg:#FAF7F2;--panel:#fff;--soft:#F0EBE2;--border:#E0D9CC;--text:#2A211A;--dim:#6B5C4E;--accent:#9B3D00;--a:#9B3D00;--b:#007A70}
+:root[data-theme=dark]{color-scheme:dark;--bg:#1A1612;--panel:#221E18;--soft:#2B241D;--border:#3D3028;--text:#F2ECE4;--dim:#C9BEB2;--accent:#D9691F;--a:#FF9955;--b:#57CFC0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1120px;margin:auto;padding:22px}header{display:flex;justify-content:space-between;align-items:start;gap:12px}h1{font-size:clamp(1.6rem,4vw,2.3rem);line-height:1.15;margin:6px 0 12px}h2{font-size:1.05rem;line-height:1.4;margin:0 0 12px}p{margin:8px 0 14px}.eyebrow{font-size:.8rem;letter-spacing:.07em;color:var(--accent);text-transform:uppercase}.intro{color:var(--dim);max-width:80ch}.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px}.card{border:1px solid var(--border);border-radius:12px;padding:18px;background:var(--panel);min-width:0}.small,small{color:var(--dim);font-size:.85rem}button,input,select{font:inherit}button,select{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 12px}button{cursor:pointer}button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}button:disabled{opacity:.6;cursor:default}a{color:var(--accent)}button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #009688;outline-offset:3px}.toprow{display:flex;gap:12px;justify-content:space-between;align-items:center}.actions{display:flex;gap:8px;align-items:center;margin:10px 0;flex-wrap:wrap}.actions .clock{margin-left:auto;font-variant-numeric:tabular-nums}.scene{display:block;width:100%;height:auto}canvas.graph{width:100%;height:auto;display:block}.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.83rem}.legend i{display:inline-block;width:20px;vertical-align:middle;margin-right:5px}.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.metric{padding:10px;background:var(--soft);border-radius:7px;overflow-wrap:anywhere}.metric span{display:block;color:var(--dim);font-size:.82rem}.metric strong{font-size:1.1rem;font-variant-numeric:tabular-nums}.metric small{display:block}.summary{border-left:3px solid #009688;padding:8px 12px;background:var(--soft);border-radius:4px;font-size:.9rem;margin:12px 0}.equations{background:var(--soft);padding:16px;border-radius:7px;font-size:1.05rem;font-weight:650;line-height:1.8;overflow-wrap:anywhere}fieldset{border:0;margin:0;padding:0;min-width:0}legend{font-weight:650;margin-bottom:12px}label{display:flex;justify-content:space-between;gap:10px;font-size:.9rem}output{font-weight:bold;white-space:nowrap}input[type=range]{width:100%;accent-color:var(--accent);min-height:28px;margin:8px 0 18px}.question{border-top:1px solid var(--border);padding-top:14px;margin-top:18px}details{margin:18px 0 0}summary{cursor:pointer;color:var(--accent)}.details-text{margin-top:12px}.route{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:18px;border-top:1px solid var(--border);padding-top:16px;font-size:.9rem}nav{margin:0 0 18px}nav select{max-width:100%;width:100%}table{width:100%;border-collapse:collapse;font-size:.85rem}td,th{border-bottom:1px solid var(--border);padding:8px 4px;text-align:left}footer{margin-top:20px;font-size:.8rem;color:var(--dim)}[hidden]{display:none!important}.slice-controls{display:flex;gap:12px;flex-wrap:wrap}.slice-controls label{flex:1;min-width:85px;display:block}.slice-controls input{margin:0;min-height:28px}.time-section{margin-top:20px;border-top:1px solid var(--border);padding-top:16px}@media(max-width:800px){main{padding:14px}.layout{grid-template-columns:1fr}.card{padding:14px}header button{font-size:.75rem}.metrics{grid-template-columns:1fr 1fr}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+math{font-family:"Cambria Math","STIX Two Math",math;font-size:1.12em;margin:12px 0}.equations{overflow-x:auto;font-weight:400} </style></head><body><main>
+<header><div><span class="eyebrow">Seres Térmicos · Termodinámica visual · Acto I</span><h1>El calor deja una huella</h1></div><button id="theme" type="button" aria-label="Cambiar tema claro u oscuro">Claro / oscuro</button></header>
+<p class="intro">Una fuente entrega energía a un cuerpo. Compará cuánta cambia su temperatura al variar la masa y el calor específico.</p>
+<nav aria-label="Actividades del recorrido"><label for="navigation" class="small">Elegir actividad</label><select id="navigation"><option value="v00-contacto-termico.html">Prólogo · El primer encuentro</option><option value="v01-calor-capacidad.html" selected>Acto I · El calor deja una huella</option><option value="v02-primera-ley.html">Acto II · La energía cruza la frontera</option><option value="v03-entropia.html">Acto III · La dirección del cambio</option><option value="v04-tercera-ley.html">Acto IV · El límite del frío</option><option value="v05-conduccion-fourier.html">Acto V · Una pendiente conduce calor</option><option value="v06-difusion-1d.html">Acto VI · El calor recorre una línea</option><option value="v07-difusion-2d.html">Acto VII · La línea se vuelve superficie</option><option value="v08-difusion-3d.html">Acto VIII · El calor habita un volumen</option></select></nav>
+<noscript>Activá JavaScript para calcular y visualizar esta actividad. El modelo y sus supuestos se describen debajo.</noscript>
+<div class="layout"><section class="card"><h2>Mirar el fenómeno</h2><canvas id="scene" class="scene" role="img" aria-label="Representación del modelo"></canvas>
+<div class="slice-controls" id="sliceControls" hidden><label for="slice-x">Corte X<input id="slice-x" type="range" min="0" max="15" value="8" step="1"></label><label for="slice-y">Corte Y<input id="slice-y" type="range" min="0" max="15" value="8" step="1"></label><label for="slice-z">Corte Z<input id="slice-z" type="range" min="0" max="15" value="8" step="1"></label></div>
+<p id="viewNote" class="small"></p><div class="actions"><button id="start" class="primary" type="button">Iniciar</button><button id="reset" type="button">Reiniciar</button><span id="clock" class="clock small">t = 0 s</span></div>
+<p class="small">Reloj simulado: 2 s por cada segundo de reproducción, hasta 60 s. La rapidez del dibujo no modifica el modelo.</p><h2>Calor recibido frente al cambio de temperatura</h2><div id="legend" class="legend"></div><canvas id="graph" class="graph" role="img" aria-label="Gráfica cartesiana"></canvas><p id="summary" class="summary"></p><div id="metrics" class="metrics"></div>
+<section id="timeSection" class="time-section" hidden><h2>El mismo campo, observado en el tiempo</h2><p id="probeLabel" class="small"></p><canvas id="timeGraph" class="graph" role="img" aria-label="Temperatura del termómetro fijo frente al tiempo"></canvas></section>
+<details><summary>Valores de la gráfica principal</summary><p class="small">Último punto de cada trazo, en las unidades indicadas en los ejes. En un corte espacial, el último punto está en el extremo derecho del perfil.</p><table><thead><tr><th scope="col">Trazo</th><th scope="col">X</th><th scope="col">Y</th></tr></thead><tbody id="table"></tbody></table></details>
+</section><aside class="card"><fieldset id="settings"><legend>Preparar la experiencia</legend><div id="controls"></div></fieldset><p class="small">Reiniciá para cambiar los parámetros de una experiencia ya iniciada.</p><h2>La ecuación</h2><div class="equations"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>Q</mi><mo>=</mo><mi>P</mi><mo>·</mo><mi>t</mi></math><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mi>Q</mi><mo>=</mo><mi>m</mi><mo>·</mo><mi>c</mi><mo>·</mo><mi>ΔT</mi></math></div><div class="question"><h2>Una pregunta para explorar</h2><p>Con el mismo calor recibido, ¿qué cambia al duplicar la masa? ¿Y al duplicar c?</p></div><details><summary>Qué calcula y qué supone</summary><div class="details-text small">Modelo de capacidad térmica uniforme, sin pérdidas, trabajo ni cambios de fase. T inicial = 20 °C; masa y c constantes. Los valores de c definen materiales ideales, no muestras identificadas ni datos medidos. No extrapolarlo a agua que hierva. La fuente externa aporta toda la energía ganada por el cuerpo.</div></details></aside></div>
+<div class="route"><a href="v00-contacto-termico.html">← El primer encuentro</a><a href="termodinamica.html">Ver todo el recorrido</a><a href="v02-primera-ley.html">La energía cruza la frontera →</a></div>
+<footer>Actividad educativa ideal; no son datos experimentales. <a href="https://openstax.org/books/university-physics-volume-2/pages/1-4-heat-transfer-specific-heat-and-calorimetry" target="_blank" rel="noopener">Referencia física</a> · <a href="https://design.lemeit.ar" target="_blank" rel="noopener">Paleta lemeit-design</a>. HTML autónomo, sin WebGL ni conexión requerida. La animación se pausa al ocultar la pestaña.</footer>
+</main><script>const COURSE_CONFIG={"id":1,"file":"v01-calor-capacidad.html","title":"El calor deja una huella","intro":"Una fuente entrega energía a un cuerpo. Compará cuánta cambia su temperatura al variar la masa y el calor específico.","graph":"Calor recibido frente al cambio de temperatura","duration":60,"rate":2,"controls":[["mass","Masa (kg)",0.1,0.5,0.1,0.1],["c","Calor específico ideal (J/kg·°C)",500,2000,500,1000],["power","Potencia de la fuente (W)",25,100,25,50]],"equations":"Q = P·t<br>Q = m·c·ΔT","question":"Con el mismo calor recibido, ¿qué cambia al duplicar la masa? ¿Y al duplicar c?","details":"Modelo de capacidad térmica uniforme, sin pérdidas, trabajo ni cambios de fase. T inicial = 20 °C; masa y c constantes. Los valores de c definen materiales ideales, no muestras identificadas ni datos medidos. No extrapolarlo a agua que hierva. La fuente externa aporta toda la energía ganada por el cuerpo.","source":"https://openstax.org/books/university-physics-volume-2/pages/1-4-heat-transfer-specific-heat-and-calorimetry","label":"Acto I"};
+// Modelos macroscópicos. Unidades SI; las diferencias en °C equivalen a K.
+function calorimetry({mass=.1,c=1000,power=100,time=0,t0=20}={}) {
+  const q=power*time,capacity=mass*c;
+  return {q,capacity,temperature:t0+q/capacity,delta:q/capacity};
+}
+function firstLaw({heatRate=80,workRate=30,time=0}={}) {
+  const q=heatRate*time,w=workRate*time;return {q,w,u:q-w};
+}
+function contactEntropy({a0=80,b0=20,ca=100,cb=100,g=5,time=0}={}) {
+  const eq=(ca*a0+cb*b0)/(ca+cb),diff=(a0-b0)*Math.exp(-g*(1/ca+1/cb)*time);
+  const a=eq+cb/(ca+cb)*diff,b=eq-ca/(ca+cb)*diff;
+  const sa=ca*Math.log((a+273.15)/(a0+273.15)),sb=cb*Math.log((b+273.15)/(b0+273.15));
+  const power=g*(a-b),production=power*(1/(b+273.15)-1/(a+273.15));
+  return {a,b,eq,sa,sb,total:sa+sb,production,power,qa:ca*(a-a0),qb:cb*(b-b0)};
+}
+// Modelo ilustrativo de baja T: C=beta*T^3; S(0)=0. No son datos medidos.
+function thirdLaw(temperature,beta=.0003) {
+  return {temperature,capacity:beta*temperature**3,entropy:beta*temperature**3/3,energy:beta*temperature**4/4};
+}
+function fourier({left=80,right=20,length=1,k=1,area=.01}={}) {
+  const gradient=(right-left)/length,power=-k*area*gradient;
+  return {gradient,power,flux:power/area,at:x=>left+(right-left)*x/length};
+}
+function createDiffusion({dimension=1,n=dimension===1?48:dimension===2?28:16,alpha=.001,pattern='hot'}={}) {
+  if(![1,2,3].includes(dimension)||!Number.isInteger(n)||n<2||!Number.isFinite(alpha)||alpha<=0)throw Error('Malla inválida');
+  const size=n**dimension,field=new Float64Array(size),buffer=new Float64Array(size),h=1/n;
+  const index=(x,y=0,z=0)=>x+n*y+n*n*z;
+  let initialMean=0;
+  for(let z=0;z<(dimension===3?n:1);z++)for(let y=0;y<(dimension>=2?n:1);y++)for(let x=0;x<n;x++){
+    const r2=((x+.5)/n-.3)**2+(dimension>=2?((y+.5)/n-.5)**2:0)+(dimension===3?((z+.5)/n-.5)**2:0);
+    const pulse=60*Math.exp(-r2/(2*.1**2));const t=pattern==='cold'?80-pulse:20+pulse;
+    field[index(x,y,z)]=t;initialMean+=t/size;
+  }
+  return {dimension,n,size,h,alpha,field,buffer,index,time:0,initialMean,stableDt:.4*h*h/(dimension*alpha)};
+}
+function diffusionStep(s,dt) {
+  if(!Number.isFinite(dt)||dt<0||dt>s.stableDt*(1+1e-10))throw Error('Paso fuera del límite difusivo');
+  const {n,dimension,field:a,buffer:b}=s,r=s.alpha*dt/(s.h*s.h);b.set(a);
+  // Sólo caras interiores: cada transferencia sale de una celda y entra en su vecina.
+  for(let z=0;z<(dimension===3?n:1);z++)for(let y=0;y<(dimension>=2?n:1);y++)for(let x=0;x<n;x++){
+    const i=s.index(x,y,z);
+    if(x+1<n){const q=r*(a[i+1]-a[i]);b[i]+=q;b[i+1]-=q;}
+    if(dimension>=2&&y+1<n){const q=r*(a[i+n]-a[i]);b[i]+=q;b[i+n]-=q;}
+    if(dimension===3&&z+1<n){const q=r*(a[i+n*n]-a[i]);b[i]+=q;b[i+n*n]-=q;}
+  }
+  s.field=b;s.buffer=a;s.time+=dt;
+}
+function advanceDiffusion(s,dt) {
+  if(!Number.isFinite(dt)||dt<0)throw Error('Intervalo inválido');
+  const steps=Math.max(1,Math.ceil(dt/s.stableDt));for(let i=0;i<steps;i++)diffusionStep(s,dt/steps);
+}
+function diffusionStats(s) {
+  let min=Infinity,max=-Infinity,sum=0;for(const t of s.field){min=Math.min(min,t);max=Math.max(max,t);sum+=t;}
+  const mean=sum/s.size;return {min,max,mean,meanError:mean-s.initialMean,excessEnergy:1000*(mean-20)};
+}
+
+(()=>{
+'use strict';
+const cfg=COURSE_CONFIG,$=id=>document.getElementById(id),fmt=(x,n=2)=>new Intl.NumberFormat('es-AR',{maximumFractionDigits:n}).format(Math.abs(x)<1e-10?0:x);
+let params={},state={},history=[],playing=false,last=null,paintTime=0;
+const color=t=>{const f=Math.max(0,Math.min(1,(t-20)/60));return `rgb(${Math.round(0+255*f)},${Math.round(150-63*f)},${Math.round(136-102*f)})`;};
+function css(k){return getComputedStyle(document.documentElement).getPropertyValue(k).trim();}
+function setupCanvas(canvas,w,h){const d=Math.min(2,devicePixelRatio||1);canvas.width=w*d;canvas.height=h*d;canvas.style.aspectRatio=w+'/'+h;const c=canvas.getContext('2d');c.setTransform(d,0,0,d,0,0);c.clearRect(0,0,w,h);return c;}
+function chart(canvas,series,{xmin=0,xmax=60,ymin=0,ymax=100,xlabel='Tiempo (s)',ylabel='Temperatura (°C)',dots=true}={}){
+ if(xmax<=xmin)xmax=xmin+1;if(ymax<=ymin)ymax=ymin+1;
+ const mobile=innerWidth<650,c=setupCanvas(canvas,700,330),L=mobile?88:76,R=668,T=35,B=267;
+ const X=x=>L+(R-L)*(x-xmin)/(xmax-xmin),Y=y=>B-(B-T)*(y-ymin)/(ymax-ymin);
+ c.font=`${mobile?23:17}px system-ui`;c.fillStyle=css('--dim');c.fillText(ylabel,L,23);
+ for(let i=0;i<=4;i++){const x=xmin+(xmax-xmin)*i/4,y=ymin+(ymax-ymin)*i/4;c.strokeStyle=css('--border');c.lineWidth=1;c.beginPath();c.moveTo(X(x),T);c.lineTo(X(x),B);c.moveTo(L,Y(y));c.lineTo(R,Y(y));c.stroke();c.fillStyle=css('--dim');c.textAlign='center';c.fillText(fmt(x,xmax<2?2:1),X(x),B+30);c.textAlign='right';c.fillText(fmt(y,Math.abs(ymax-ymin)<1?3:1),L-9,Y(y)+6);}
+ c.textAlign='center';c.fillText(xlabel,(L+R)/2,322);c.textAlign='left';
+ c.save();c.beginPath();c.rect(L,T,R-L,B-T);c.clip();
+ series.forEach((s,i)=>{c.strokeStyle=s.color||[css('--a'),css('--b'),css('--text')][i%3];c.lineWidth=3;c.setLineDash(s.dash||[]);c.beginPath();s.points.forEach(([x,y],j)=>j?c.lineTo(X(x),Y(y)):c.moveTo(X(x),Y(y)));c.stroke();c.setLineDash([]);if(dots&&s.points.length){const [x,y]=s.points.at(-1);c.fillStyle=c.strokeStyle;c.beginPath();c.arc(X(x),Y(y),4,0,Math.PI*2);c.fill();}});c.restore();
+ canvas.setAttribute('aria-label',`${cfg.graph}. X: ${xlabel}. Y: ${ylabel}. ${series.map(s=>s.label+': '+fmt(s.points.at(-1)?.[1]??0,4)).join('; ')}`);
+ $('legend').innerHTML=series.map((s,i)=>`<span><i style="border-top:3px ${s.dash?'dashed':'solid'} ${s.color||[css('--a'),css('--b'),css('--text')][i%3]}"></i>${s.label}</span>`).join('');
+}
+function controls(){
+ $('controls').innerHTML=cfg.controls.map(([key,label,min,max,step,value])=>`<label for="p-${key}">${label}<output id="o-${key}"></output></label><input type="range" id="p-${key}" min="${min}" max="${max}" step="${step}" value="${value}">`).join('');
+ cfg.controls.forEach(([key])=>$('p-'+key).addEventListener('input',reset));
+ if(cfg.id===8){$('sliceControls').hidden=false;for(const key of ['x','y','z'])$('slice-'+key).addEventListener('input',render);}
+}
+function reset(){playing=false;last=null;params={};cfg.controls.forEach(([k])=>{params[k]=Number($('p-'+k).value);$('o-'+k).value=fmt(params[k],4);});
+ state={time:0};if(cfg.dimension){state.diff=createDiffusion({dimension:cfg.dimension,alpha:params.alpha});state.initial=Array.from(state.diff.field);}
+ history=[];sample();$('settings').disabled=false;$('start').textContent=cfg.id===4?'Recorrer curva':'Iniciar';render();}
+function current(){const t=state.time;
+ switch(cfg.id){case 1:return calorimetry({...params,time:t});case 2:return firstLaw({...params,time:t});case 3:return contactEntropy({...params,time:t});case 4:return thirdLaw(Math.max(.2,params.temperature*(1-t/cfg.duration)+.2*t/cfg.duration));case 5:return fourier(params);default:return diffusionStats(state.diff);}}
+function sample(){const v=current();history.push({t:state.time,...v});if(history.length>1600)history=history.filter((_,i)=>i%2===0||i===history.length-1);}
+function tick(dt){const remaining=cfg.duration-state.time,step=Math.min(dt,remaining);if(cfg.dimension)advanceDiffusion(state.diff,step);state.time+=step;if(state.time>=cfg.duration-1e-9){state.time=cfg.duration;playing=false;$('start').textContent='Finalizado';}sample();}
+function metric(name,value,note=''){return `<div class="metric"><span>${name}</span><strong>${value}</strong><small>${note}</small></div>`;}
+function scenes(v){
+ const c=setupCanvas($('scene'),700,cfg.id===8?640:220),dark=document.documentElement.dataset.theme==='dark';c.font='20px system-ui';c.textAlign='center';
+ const block=(x,w,t,label,sub)=>{c.fillStyle=color(t);c.fillRect(x,45,w,100);c.fillStyle='#fff';c.strokeStyle='#1A1612';c.lineWidth=3;c.strokeText(label,x+w/2,77);c.fillText(label,x+w/2,77);c.font='bold 26px system-ui';c.strokeText(fmt(t,1)+' °C',x+w/2,115);c.fillText(fmt(t,1)+' °C',x+w/2,115);c.font='18px system-ui';c.fillStyle=css('--dim');c.fillText(sub,x+w/2,175);};
+ if(cfg.id===1){block(240,220,v.temperature,'Cuerpo uniforme',`C = ${fmt(v.capacity)} J/°C`);c.fillStyle=css('--accent');c.fillText(`Fuente → ${params.power} W → cuerpo`,350,210);}
+ if(cfg.id===2){c.fillStyle=css('--soft');c.fillRect(225,35,250,140);c.fillStyle=css('--text');c.fillText('Sistema cerrado',350,75);c.font='bold 26px system-ui';c.fillText('ΔU = '+fmt(v.u)+' J',350,120);c.font='17px system-ui';c.fillStyle=css('--a');c.fillText(params.heatRate>=0?'Calor →':'← Calor',100,85);c.fillText(fmt(Math.abs(params.heatRate))+' W',100,115);c.fillStyle=css('--b');c.fillText(params.workRate>=0?'Trabajo →':'← Trabajo',585,85);c.fillText(fmt(Math.abs(params.workRate))+' W',585,115);c.fillStyle=css('--dim');c.fillText('Flechas: cruce de energía por la frontera. No es un motor modelado.',350,210);}
+ if(cfg.id===3){block(110,240,v.a,'A · C = 100 J/K','ΔS_A = '+fmt(v.sa,3)+' J/K');block(350,240,v.b,'B · C = '+params.cb+' J/K','ΔS_B = '+fmt(v.sb,3)+' J/K');c.fillStyle=css('--accent');c.fillText(v.power>1e-8?'Calor: A → B':v.power<-1e-8?'Calor: B → A':'Sin flujo neto',350,210);}
+ if(cfg.id===4){c.fillStyle=css('--soft');c.fillRect(130,40,440,80);c.fillStyle=css('--b');c.fillRect(130,40,440*v.temperature/10,80);c.fillStyle=css('--text');c.font='bold 28px system-ui';c.fillText(fmt(v.temperature,2)+' K',350,155);c.font='18px system-ui';c.fillText('Recorrido por estados de la curva; no es tiempo de enfriamiento.',350,205);}
+ if(cfg.id===5){for(let i=0;i<100;i++){c.fillStyle=color(v.at(i/99));c.fillRect(70+i*5.6,55,6,60);}c.fillStyle=css('--text');c.fillText(params.left+' °C',75,40);c.fillText(params.right+' °C',625,40);c.fillText('x = 0 m',75,150);c.fillText('x = 1 m',625,150);c.fillStyle=css('--accent');c.fillText(v.power>0?'Calor →':v.power<0?'← Calor':'Sin flujo',350,150);c.fillText(`P = ${fmt(v.power,3)} W · Energía que atravesó: ${fmt(v.power*state.time,2)} J`,350,205);}
+ if(cfg.dimension){const s=state.diff,n=s.n;
+  if(cfg.dimension===1){for(let x=0;x<n;x++){c.fillStyle=color(s.field[x]);c.fillRect(65+x*570/n,65,570/n+1,60);}c.fillStyle=css('--text');c.fillText('0 m',65,160);c.fillText('1 m',635,160);c.fillText('Extremos aislados · cada franja es una celda',350,205);}
+  const drawSlice=(ox,oy,size,axis,idx)=>{for(let j=0;j<n;j++)for(let i=0;i<n;i++){const xyz=axis==='XY'?[i,j,idx]:axis==='XZ'?[i,idx,j]:[idx,i,j];c.fillStyle=color(s.field[s.index(...xyz)]);c.fillRect(ox+i*size/n,oy+(n-1-j)*size/n,size/n+1,size/n+1);}c.strokeStyle=css('--dim');c.strokeRect(ox,oy,size,size);c.fillStyle=css('--text');c.font='16px system-ui';c.fillText(axis,ox+size/2,oy-8);c.fillText(axis[0]+': 0 → 1 m',ox+size/2,oy+size+24);c.save();c.translate(ox-12,oy+size/2);c.rotate(-Math.PI/2);c.fillText(axis[1]+': 0 → 1 m',0,0);c.restore();};
+  if(cfg.dimension===2){drawSlice(260,25,160,'XY',0);const row=Math.floor(n/2),y=(row+.5)/n;c.strokeStyle=css('--text');c.setLineDash([6,3]);c.beginPath();c.moveTo(260,25+160*(1-y));c.lineTo(420,25+160*(1-y));c.stroke();c.setLineDash([]);c.fillStyle=css('--dim');c.fillText(`Corte marcado: y = ${fmt(y,3)} m`,350,219);}
+  if(cfg.dimension===3){const [ix,iy,iz]=sliceIndices();drawSlice(48,36,165,'XY',iz);drawSlice(280,36,165,'XZ',iy);drawSlice(512,36,165,'YZ',ix);
+    c.fillStyle=css('--dim');c.fillText(`Planos: x=${fmt((ix+.5)/n,3)}, y=${fmt((iy+.5)/n,3)}, z=${fmt((iz+.5)/n,3)} m`,350,258);
+    // Proyección isométrica del campo real. Se omiten celdas casi iguales al fondo.
+    const base=20;for(let z=n-1;z>=0;z--)for(let y=n-1;y>=0;y--)for(let x=0;x<n;x++){const t=s.field[s.index(x,y,z)],excess=Math.abs(t-base);if(excess<.5)continue;const px=350+(x-y)*11,py=510+(x+y-n)*5-z*10;c.globalAlpha=.12+.65*Math.min(1,excess/60);c.fillStyle=color(t);c.fillRect(px-4,py-4,8,8);}c.globalAlpha=1;c.fillStyle=css('--text');c.fillText('Vista oblicua de las celdas · escala fija 20–80 °C',350,610);
+  }
+ }
+ $('scene').setAttribute('aria-label',$('summary').textContent||cfg.intro);
+}
+function sliceIndices(){return ['x','y','z'].map(k=>Number($('slice-'+k).value));}
+function render(){const v=current(),t=state.time;let series=[],options={},metrics='',summary='';
+ $('clock').textContent=cfg.id===4?'Recorrido: '+fmt(100*t/cfg.duration,0)+' %':'t = '+fmt(t,1)+' s';
+ if(cfg.id===1){series=[{label:'Q recibido',points:history.map(h=>[h.delta,h.q])}];options={xmax:Math.max(1,params.power*cfg.duration/(params.mass*params.c)),ymax:params.power*cfg.duration,xlabel:'Cambio de temperatura ΔT (°C)',ylabel:'Calor Q (J)'};metrics=metric('Temperatura',fmt(v.temperature,2)+' °C')+metric('Calor recibido',fmt(v.q)+' J')+metric('Capacidad térmica',fmt(v.capacity)+' J/°C');summary=`El cuerpo recibió ${fmt(v.q)} J y cambió ${fmt(v.delta)} °C. La pendiente Q/ΔT es su capacidad térmica.`;}
+ if(cfg.id===2){const range=Math.max(100,Math.abs(params.heatRate*30),Math.abs(params.workRate*30),Math.abs((params.heatRate-params.workRate)*30));series=[['q','Q'],['w','W'],['u','ΔU']].map(([k,label],i)=>({label,points:history.map(h=>[h.t,h[k]]),dash:i?[6,3]:undefined}));options={xmax:30,ymin:-range,ymax:range,ylabel:'Energía intercambiada o cambio (J)'};metrics=metric('Q recibido',fmt(v.q)+' J')+metric('W realizado',fmt(v.w)+' J')+metric('ΔU = Q − W',fmt(v.u)+' J');summary=`Balance: ${fmt(v.q)} − (${fmt(v.w)}) = ${fmt(v.u)} J. ${params.workRate<0?'El trabajo negativo entrega energía al sistema.':''}`;}
+ if(cfg.id===3){const end=contactEntropy({...params,time:60}),lo=Math.min(end.sa,end.sb,0),hi=Math.max(end.sa,end.sb,end.total,.1);series=[['sa','ΔS A'],['sb','ΔS B'],['total','ΔS total']].map(([k,label],i)=>({label,points:history.map(h=>[h.t,h[k]]),dash:i?[6,3]:undefined}));options={xmax:60,ymin:lo*1.1,ymax:hi*1.1,ylabel:'Cambio de entropía ΔS (J/K)'};metrics=metric('ΔS del conjunto',fmt(v.total,4)+' J/K')+metric('Producción actual',fmt(v.production,5)+' W/K')+metric('Equilibrio previsto',fmt(v.eq,2)+' °C');summary=`A: ${fmt(v.a,2)} °C. B: ${fmt(v.b,2)} °C. ΔS total = ${fmt(v.total,4)} J/K; la suma crece aunque uno de los cuerpos pierda entropía.`;}
+ if(cfg.id===4){series=[{label:'S(T), modelo',points:Array.from({length:101},(_,i)=>[i/10,thirdLaw(i/10).entropy])},{label:'Estado explorado',points:[[v.temperature,v.entropy]],color:css('--b')}];options={xmax:10,ymax:.105,xlabel:'Temperatura absoluta T (K)',ylabel:'Entropía S (J/K)'};metrics=metric('Temperatura',fmt(v.temperature,3)+' K')+metric('Entropía del modelo',fmt(v.entropy,6)+' J/K')+metric('Capacidad térmica',fmt(v.capacity,6)+' J/K');summary='Exploramos un límite de una curva ideal de baja temperatura. No estamos calculando un proceso de refrigeración ni alcanzando 0 K.';}
+ if(cfg.id===5){series=[{label:'Perfil estacionario',points:[[0,params.left],[1,params.right]]}];options={xmax:1,ymax:100,xlabel:'Posición x (m)',ylabel:'Temperatura (°C)'};metrics=metric('Potencia de izquierda a derecha',fmt(v.power,3)+' W')+metric('Flujo por área',fmt(v.flux,2)+' W/m²')+metric('Gradiente',fmt(v.gradient,2)+' °C/m');summary=`El perfil se mantiene fijo. Flujo ${v.power>0?'hacia la derecha':v.power<0?'hacia la izquierda':'nulo'}; potencia ${fmt(Math.abs(v.power),3)} W. Los reservorios sostienen el intercambio.`;}
+ if(cfg.dimension){const s=state.diff,n=s.n,indices=cfg.dimension===3?sliceIndices():[0,Math.floor(n/2),0];const [ix,iy,iz]=indices,row=Array.from({length:n},(_,x)=>s.index(x,cfg.dimension>=2?iy:0,cfg.dimension===3?iz:0));series=[{label:'Inicial',points:row.map((i,x)=>[(x+.5)/n,state.initial[i]]),dash:[5,4],color:css('--dim')},{label:'Actual',points:row.map((i,x)=>[(x+.5)/n,s.field[i]]),color:css('--a')}];options={xmax:1,ymax:100,xlabel:'Posición x (m)',ylabel:'Temperatura (°C)',dots:false};metrics=metric('Mínima / máxima',fmt(v.min,2)+' / '+fmt(v.max,2)+' °C')+metric('Temperatura media',fmt(v.mean,5)+' °C','Se conserva con bordes aislados')+metric('Error de media',fmt(v.meanError,10)+' °C')+metric('Energía respecto de 20 °C',fmt(v.excessEnergy,3)+' J');summary=`t=${fmt(t,1)} s. Media ${fmt(v.mean,5)} °C. La zona caliente pierde temperatura y las vecinas ganan; la energía total se conserva. Malla ${n}${cfg.dimension>1?' × '+n:''}${cfg.dimension===3?' × '+n:''}.`;
+ $('timeSection').hidden=false;const probe=Math.floor(n*.3),probeIndex=s.index(probe,cfg.dimension>=2?Math.floor(n/2):0,cfg.dimension===3?Math.floor(n/2):0);const probeHistory=history.map(h=>[h.t,h.probe]);drawTime(probeHistory);$('probeLabel').textContent=`Termómetro fijo en x=${fmt((probe+.5)/n,3)} m${cfg.dimension>=2?', y='+fmt((Math.floor(n/2)+.5)/n,3)+' m':''}${cfg.dimension===3?', z='+fmt((Math.floor(n/2)+.5)/n,3)+' m':''}. Los controles de corte no mueven este termómetro.`;
+ }
+ $('metrics').innerHTML=metrics;$('summary').textContent=summary;chart($('graph'),series,options);scenes(v);
+ $('table').innerHTML=series.map(s=>`<tr><td>${s.label}</td><td>${fmt(s.points.at(-1)?.[0]??0,4)}</td><td>${fmt(s.points.at(-1)?.[1]??0,6)}</td></tr>`).join('');
+ if(cfg.dimension)$('viewNote').textContent='Escala fija de color: 20 °C verde azulado → 80 °C naranja. Las temperaturas no se reescalan para exagerar la imagen.';
+}
+function drawTime(points){const oldLegend=$('legend').innerHTML;chart($('timeGraph'),[{label:'Termómetro fijo',points}],{xmax:120,ymin:0,ymax:100,xlabel:'Tiempo (s)',ylabel:'Temperatura (°C)'});$('legend').innerHTML=oldLegend;}
+// Añadir el mismo termómetro a cada muestra numérica, independiente de la vista.
+const baseSample=sample;sample=function(){baseSample();if(cfg.dimension){const s=state.diff,n=s.n;history.at(-1).probe=s.field[s.index(Math.floor(n*.3),cfg.dimension>=2?Math.floor(n/2):0,cfg.dimension===3?Math.floor(n/2):0)];}};
+function frame(now){if(playing&&last!==null){const dt=Math.min(.25,Math.max(0,(now-last)/1000))*cfg.rate;tick(dt);paintTime+=dt;if(paintTime>.12||!playing){render();paintTime=0;}}last=now;requestAnimationFrame(frame);}
+$('start').onclick=()=>{if(state.time>=cfg.duration)return;playing=!playing;last=null;$('settings').disabled=state.time>0||playing;$('start').textContent=playing?'Pausar':cfg.id===4?'Continuar recorrido':'Continuar';};$('reset').onclick=reset;
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&playing){playing=false;last=null;$('start').textContent='Continuar';}});
+$('theme').onclick=()=>{const t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;try{localStorage.setItem('lemeit-theme',t);}catch{}render();};
+try{const t=localStorage.getItem('lemeit-theme');document.documentElement.dataset.theme=t==='dark'?'dark':'light';}catch{}
+controls();reset();requestAnimationFrame(frame);
+// Herramientas de inspección de los resultados reales, sin avanzar el estado.
+window.thermalCourse={snapshot:()=>({id:cfg.id,time:state.time,playing,params:{...params},current:current(),field:cfg.dimension?Array.from(state.diff.field):undefined,initialMean:state.diff?.initialMean,history:history.map(x=>({...x}))})};
+})();
+
+document.getElementById('navigation').addEventListener('change',e=>location.href=e.target.value);</script></body></html>

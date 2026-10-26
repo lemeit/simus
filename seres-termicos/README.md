@@ -2,22 +2,22 @@
 
 [![sitio: profe.lemeit.ar](https://img.shields.io/badge/sitio-profe.lemeit.ar-009688?style=flat-square&labelColor=555555)](https://profe.lemeit.ar/projects/seres-termicos/)
 [![docs: guía física](https://img.shields.io/badge/docs-gu%C3%ADa%20f%C3%ADsica-009688?style=flat-square&labelColor=555555)](https://github.com/lemeit/simus/blob/main/seres-termicos/guia-fisica-cronologica-seres-termicos.md)
-[![versión: V4.6](https://img.shields.io/badge/versi%C3%B3n-V4.6-FF5722?style=flat-square&labelColor=555555)](https://github.com/lemeit/simus/blob/main/seres-termicos/seres_termicos_V4_6.html)
+[![relato: Acto XIV](https://img.shields.io/badge/relato-Acto%20XIV-FF5722?style=flat-square&labelColor=555555)](https://github.com/lemeit/simus/blob/main/seres-termicos/seres_termicos_V4_6.html)
 [![diseño: lemeit](https://img.shields.io/badge/dise%C3%B1o-lemeit-009688?style=flat-square&labelColor=555555)](https://design.lemeit.ar)
 
 Laboratorio de simulación inspirado en los seres de temperaturas cambiantes de Borges y Guerrero. El proyecto explora difusión térmica, patrones de reacción-difusión y organismos activos con órganos, reservas finitas y respuesta a perturbaciones.
 
-## Empezar desde cero: contacto térmico
+## Empezar por el Prólogo
 
-**[00 — Dos cuerpos en contacto](v00-contacto-termico.html)** es el primer experimento animado para secundaria. Dos cuerpos a distinta temperatura intercambian energía; la escena, las curvas T(t), la potencia en watts y el calor transferido en joules muestran el mismo estado físico. Se pueden separar, pausar, reiniciar y comparar masas. Modelo macroscópico con temperaturas uniformes y energía conservada, sin pérdidas al ambiente.
+**[Prólogo — El primer encuentro](v00-contacto-termico.html)** presenta dos cuerpos que intercambian calor. Desde allí, el [recorrido visual](termodinamica.html) sigue por ocho actos hasta la difusión en un volumen y en el tiempo.
 
-La [hoja de ruta de termodinámica](recorrido-termodinamica.md) organiza el avance desde equilibrio y calorimetría hasta las leyes de la termodinámica y la difusión 1D, 2D y 3D en el tiempo. Distingue los recursos disponibles de los próximos simuladores propuestos.
+Las nueve actividades ya están disponibles: animaciones o exploraciones de modelo, gráficas cartesianas y pocos controles. Los detalles se despliegan al pedirlos. Funcionan sin servidor ni WebGL. [Ver el recorrido y sus modelos](recorrido-termodinamica.md).
 
-La [recta de temperaturas](v00-temperatura.html) se conserva como complemento: muestra un perfil estacionario en una barra, con posición en X y temperatura en Y. En el nuevo experimento, X es tiempo y Y es temperatura. Ambos HTML funcionan sin servidor, sin WebGL y sin conexión.
+La [tabla de nombres públicos y archivos técnicos](denominaciones.md) mantiene coherentes el catálogo, las guías y el sitio. La numeración de versiones se conserva para trazabilidad, no como título público.
 
-## Empezar por la versión actual
+## Acto XIV · Resistir hasta agotarse
 
-**[V4.6 — Amenazas y respuesta adaptativa](seres_termicos_V4_6.html)** es la versión más completa. Incluye seres móviles en tres dimensiones, nacimiento y extinción, intercambio de calor, reserva finita, viñetas con ecuaciones y una vista simultánea de puntos sin halos.
+**[Acto XIV · Escena VII — Resistir hasta agotarse](seres_termicos_V4_6.html)** es la versión más completa. Incluye seres móviles en tres dimensiones, nacimiento y extinción, intercambio de calor, reserva finita, viñetas con ecuaciones y una vista simultánea de puntos sin halos.
 
 Permite introducir un frente térmico o un sifón de reserva y comparar la respuesta con y sin defensa adaptativa. El movimiento, el ciclo vital y la defensa tienen reglas explícitas; no se presentan como vida biológica que emerge de la difusión por sí sola.
 
@@ -31,34 +31,34 @@ Los enlaces a archivos `.html` de este README abren **el código en GitHub**, no
 
 La serie V4 puede abrirse con doble clic, sin servidor ni bibliotecas externas. Un servidor local también sirve, pero no aumenta la potencia de cálculo: la simulación se ejecuta en el navegador de tu computadora. El sitio de documentación y sus simulaciones publicadas están en [profe.lemeit.ar](https://profe.lemeit.ar/projects/seres-termicos/).
 
-## Últimas simulaciones
+## Las escenas del acto XIV
 
 Estas versiones están guardadas como archivos independientes para poder comparar su evolución. La numeración **V4.4** no corresponde al archivo antiguo **v04-grayscott.html**.
 
 | Versión | Archivo y cambio principal |
 | --- | --- |
-| V4.1 | [Base funcional con WebGL2 y textura 3D R8](seres_termicos_V4_1.html). Cinco gaussianas iniciales que difunden. Versión histórica anterior a las correcciones del recorrido del rayo. |
-| V4.2 | [Campo y forma](seres_termicos_V4_2.html). Cinco anatomías iniciales, difusión persistente, iluminación ilustrativa y modo científico. |
-| V4.2.1 | [Vista compacta y calidad automática](seres_termicos_V4_2_1.html). Mejora el tamaño de la interfaz y el coste gráfico. |
-| V4.3 | [Bestiario de frío y fuego](seres_termicos_V4_3.html). Fuentes articuladas, latido, deriva y cuerpos calientes o fríos sostenidos por el exterior. |
-| V4.4 | [Bestiario en movimiento](seres_termicos_V4_4.html). Intercambio conservativo, reservas individuales, ciclo de vida, trayectorias 3D y viñetas ancladas. |
-| V4.5 | [Campo y vista cinemática simultánea](seres_termicos_V4_5.html). Recuadro de centros u órganos sin halos y guía de la evolución de los modelos. |
-| **V4.6** | **[Amenazas y respuesta adaptativa](seres_termicos_V4_6.html)**. Creación manual, extinción, recarga explicada, perturbaciones externas y defensa con costes de energía. |
+| Escena I | [Acto XIV · Escena I — El primer volumen térmico](seres_termicos_V4_1.html). Cinco gaussianas iniciales que difunden. Versión histórica anterior a las correcciones del recorrido del rayo. |
+| Escena II | [Acto XIV · Escena II — Las formas del campo](seres_termicos_V4_2.html). Cinco anatomías iniciales, difusión persistente, iluminación ilustrativa y modo científico. |
+| Escena III | [Acto XIV · Escena III — Una ventana al campo](seres_termicos_V4_2_1.html). Mejora el tamaño de la interfaz y el coste gráfico. |
+| Escena IV | [Acto XIV · Escena IV — Frío y fuego articulados](seres_termicos_V4_3.html). Fuentes articuladas, latido, deriva y cuerpos calientes o fríos sostenidos por el exterior. |
+| Escena V | [Acto XIV · Escena V — Nacer y extinguirse](seres_termicos_V4_4.html). Intercambio conservativo, reservas individuales, ciclo de vida, trayectorias 3D y viñetas ancladas. |
+| Escena VI | [Acto XIV · Escena VI — Mirar sin halos](seres_termicos_V4_5.html). Recuadro de centros u órganos sin halos y guía de la evolución de los modelos. |
+| **Escena VII** | **[Acto XIV · Escena VII — Resistir hasta agotarse](seres_termicos_V4_6.html)**. Creación manual, extinción, recarga explicada, perturbaciones externas y defensa con costes de energía. |
 
 ## Simuladores anteriores y ramas del proyecto
 
 | Rama | Simulación | Qué explora |
 | --- | --- | --- |
-| Campo térmico | [v01 — El campo](index.html) | Difusión 2D y fuentes gaussianas móviles. |
-| Campo térmico | [v02 — Gradiente](v02-gradiente.html) | Respuesta de agentes al gradiente de temperatura. |
-| Diagnóstico | [Prueba WebGL2 y textura 3D](test_3D.html) | Compatibilidad gráfica del navegador. |
-| Volumen | [v03 — Ray marching](v03-raymarching.html) | Antecedente técnico del render volumétrico; reconstruye el campo en cada cuadro. |
-| Reacción-difusión | [v04 — Gray–Scott](v04-grayscott.html) | Patrones de concentraciones con autocatálisis. No es difusión de temperatura ni una demostración de vida. |
-| Medio excitable | [v05 — FitzHugh–Nagumo](v05-fhn.html) | Activación, recuperación, ondas y espirales. |
-| Individuos | [v06 — Ciclo de vida 2D](v06-ciclovida.html) | Presupuesto energético individual y reglas explícitas de nacimiento y muerte. |
-| Cosmos | [v07 — Campo 3D y doble perspectiva](v07-3d.html) | Vista exterior esférica y vista desde un ser. |
-| Historia | [v08 — Espaciotiempo](v08-espaciotiempo.html) | Historial de un campo 2D apilado: el tercer eje representa tiempo. |
-| Anatomía | [B1 — Bestiario articulado](bestiario.html) | Órganos térmicos, fuego innato, termotaxis, fichas y crónica. |
+| Campo térmico | [Acto IX · Escena I — El campo que disuelve](index.html) | Difusión 2D y fuentes gaussianas móviles. |
+| Campo térmico | [Acto IX · Escena II — Seguir el gradiente](v02-gradiente.html) | Respuesta de agentes al gradiente de temperatura. |
+| Diagnóstico | [Taller técnico — Comprobar la ventana tridimensional](test_3D.html) | Compatibilidad gráfica del navegador. |
+| Volumen | [Interludio técnico — Hacer visible un campo](v03-raymarching.html) | Antecedente técnico del render volumétrico; reconstruye el campo en cada cuadro. |
+| Reacción-difusión | [Acto X · Escena I — Las manchas encuentran una forma](v04-grayscott.html) | Patrones de concentraciones con autocatálisis. No es difusión de temperatura ni una demostración de vida. |
+| Medio excitable | [Acto X · Escena II — Las ondas recorren el medio](v05-fhn.html) | Activación, recuperación, ondas y espirales. |
+| Individuos | [Acto XI — Contar a los individuos](v06-ciclovida.html) | Presupuesto energético individual y reglas explícitas de nacimiento y muerte. |
+| Cosmos | [Acto XIII · Escena I — El mundo que los contiene](v07-3d.html) | Vista exterior esférica y vista desde un ser. |
+| Historia | [Acto XIII · Escena II — La huella del tiempo](v08-espaciotiempo.html) | Historial de un campo 2D apilado: el tercer eje representa tiempo. |
+| Anatomía | [Acto XII — Un bestiario de calor](bestiario.html) | Órganos térmicos, fuego innato, termotaxis, fichas y crónica. |
 
 ## Documentación y ecuaciones
 
@@ -68,7 +68,7 @@ Estas versiones están guardadas como archivos independientes para poder compara
 
 La guía distingue temperatura relativa, calor almacenado y reserva de trabajo disponible. La termotaxis y la respuesta adaptativa son hipótesis de control añadidas: la ley de Fourier, por sí sola, no define conducta ni organismos.
 
-## Qué observar en V4.6
+## Qué observar en Resistir hasta agotarse
 
 - **Recargar reserva de nacimientos** añade presupuesto común; no calienta el campo ni recarga a los seres existentes.
 - **Crear un ser ahora** transfiere una reserva individual y declara un aporte externo si hace falta.

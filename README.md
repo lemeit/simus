@@ -2,13 +2,17 @@
 
 [![sitio: profe.lemeit.ar](https://img.shields.io/badge/sitio-profe.lemeit.ar-009688?style=flat-square&labelColor=555555)](https://profe.lemeit.ar/projects/seres-termicos/)
 [![docs: guía física](https://img.shields.io/badge/docs-gu%C3%ADa%20f%C3%ADsica-009688?style=flat-square&labelColor=555555)](https://github.com/lemeit/simus/blob/main/seres-termicos/guia-fisica-cronologica-seres-termicos.md)
-[![versión: V4.6](https://img.shields.io/badge/versi%C3%B3n-V4.6-FF5722?style=flat-square&labelColor=555555)](https://github.com/lemeit/simus/blob/main/seres-termicos/seres_termicos_V4_6.html)
+[![relato: Acto XIV](https://img.shields.io/badge/relato-Acto%20XIV-FF5722?style=flat-square&labelColor=555555)](https://github.com/lemeit/simus/blob/main/seres-termicos/seres_termicos_V4_6.html)
 [![diseño: lemeit](https://img.shields.io/badge/dise%C3%B1o-lemeit-009688?style=flat-square&labelColor=555555)](https://design.lemeit.ar)
 
 Experimento computacional de física y literatura.
 Partida de un texto de Borges; destino: emergencia, vida y muerte en un campo de reacción-difusión.
 
 ---
+
+## Entrar al relato
+
+El [Prólogo y los actos de termodinámica](seres-termicos/termodinamica.html) constituyen el inicio visual. La [tabla de denominaciones](seres-termicos/denominaciones.md) relaciona los nombres públicos con cada archivo; los códigos de versión que aparecen en este documento son referencias técnicas conservadas.
 
 ## El texto de partida
 
@@ -30,7 +34,7 @@ La pregunta que guía este proyecto:
 
 ---
 
-## El límite de la física lineal
+## Acto IX · El campo que disuelve
 
 El primer intento usa la **ecuación del calor**:
 
@@ -77,7 +81,7 @@ la ecuación del calor no tiene:
 
 ---
 
-## La física que sí produce vida: Gray-Scott (1984)
+## Acto X · Las manchas encuentran una forma
 
 Las ecuaciones de reacción-difusión de Gray-Scott son:
 
@@ -247,7 +251,7 @@ cada elemento puede *contarse*. Eso requiere un modelo diferente.
 
 ---
 
-## Enfoque B: presupuesto energético explícito
+## Acto XI · Contar a los individuos
 
 En lugar de una PDE global que genera patrones, cada ser tiene su propia variable interna de energía.
 
@@ -296,7 +300,7 @@ Los seres no emergen de las ecuaciones; las ecuaciones describen cómo cada ser 
 
 ---
 
-## Organismos articulados — Línea BESTIARIO (B1)
+## Acto XII · Un bestiario de calor
 
 El Enfoque B resuelve los individuos (presupuesto energético, nacimiento, muerte),
 pero su cuerpo es una gaussiana: un punto con brillo. La cita de Borges dice algo
@@ -390,7 +394,7 @@ de los seres: dibujar una brasa crea un gradiente, y los fríos lo escalan.
 
 ---
 
-## Universo esférico (v07)
+## Acto XIII · El mundo que los contiene
 
 Borges describe un cosmos, no una grilla. La geometría rectangular de los primeros modelos es una conveniencia numérica, no una decisión física. En v07 el universo es una **esfera**:
 
@@ -431,7 +435,7 @@ Presionar **Tab** pasa a seguir el siguiente ser.
 
 ---
 
-## Secuencia de versiones
+## Correspondencias técnicas del relato
 
 | Archivo | Física | Estado |
 |---------|--------|--------|
@@ -514,7 +518,7 @@ donde $\sigma$ es el coeficiente de extinción proporcional a $|T|$.
 
 ---
 
-## Extensión a 4D: espaciotiempo (v08)
+## Acto XIII · La huella del tiempo
 
 Esta es la visualización más borgiana. En lugar de simular en 3D, se acumula la **historia completa** del campo 2D como si el tiempo fuera una tercera dimensión espacial.
 
