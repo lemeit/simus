@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>00 · Una recta de temperaturas — Seres Térmicos</title>
+<style>
+:root{color-scheme:light;--bg:#FAF7F2;--panel:#fff;--soft:#F0EBE2;--border:#E0D9CC;--text:#2A211A;--dim:#6B5C4E;--accent:#9B3D00;--curve:#9B3D00;--teal:#009688}
+:root[data-theme=dark]{color-scheme:dark;--bg:#1A1612;--panel:#221E18;--soft:#2B241D;--border:#3D3028;--text:#F2ECE4;--dim:#C9BEB2;--accent:#D9691F;--curve:#D9691F}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}main{max-width:1100px;margin:auto;padding:24px}header{display:flex;gap:16px;justify-content:space-between;align-items:start}h1{font-size:clamp(1.5rem,4vw,2.2rem);line-height:1.18;margin:8px 0 12px}h2{font-size:1.1rem;margin:0 0 12px}p{margin:8px 0 16px}.eyebrow{color:var(--accent);font-size:.8rem;letter-spacing:.08em;text-transform:uppercase}.intro{max-width:76ch;color:var(--dim)}button,input{font:inherit}button{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 12px;cursor:pointer}button:hover{border-color:var(--accent)}button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--teal);outline-offset:3px}a{color:var(--accent)}.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px}.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px;min-width:0}.graph-card{padding:16px}.plot{width:100%;height:auto;display:block;overflow:visible}.plot text{font:14px system-ui;fill:var(--dim)}.plot .grid{stroke:var(--border);stroke-width:1}.plot .axis{fill:none;stroke:var(--dim);stroke-width:1.5}.plot .curve{stroke:var(--curve);stroke-width:4;fill:none}.plot .point{fill:var(--panel);stroke:var(--curve);stroke-width:3}.plot .mid{fill:var(--teal);stroke:var(--panel);stroke-width:2}.label{display:flex;justify-content:space-between;gap:10px}input[type=range]{width:100%;accent-color:var(--accent);margin:12px 0 24px;min-height:24px}output{font-weight:650;white-space:nowrap}.equation{font-size:1.18rem;background:var(--soft);padding:14px;border-radius:8px;overflow-wrap:anywhere}.numeric{font-variant-numeric:tabular-nums}.small{font-size:.87rem;color:var(--dim)}.presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.strip{height:24px;border-radius:4px;margin-top:12px}.strip-labels{display:flex;justify-content:space-between;font-size:.8rem;color:var(--dim)}table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{padding:7px 4px;text-align:left;border-bottom:1px solid var(--border)}.below{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}ul,ol{padding-left:22px;margin-bottom:0}.caption{font-size:.9rem;color:var(--dim);margin:4px 0}.reading{border-left:3px solid var(--teal);padding-left:12px}footer{margin-top:20px;color:var(--dim);font-size:.85rem}details{margin-top:12px}summary{cursor:pointer;color:var(--accent)}noscript{display:block;padding:16px;background:var(--soft)}@media(max-width:800px){main{padding:16px}.layout,.below{grid-template-columns:1fr}.card{padding:16px}.plot text{font-size:15px}header button{font-size:.8rem}}
+</style>
+</head>
+<body>
+<main>
+<header><div><span class="eyebrow">Seres Térmicos · Paso 00</span><h1>Una recta de temperaturas</h1></div><button id="theme" type="button" aria-label="Cambiar tema claro u oscuro">Claro / oscuro</button></header>
+<p class="intro">Antes de dibujar un ser, aprendamos a dibujar la temperatura. Imaginá una barra de un metro con cada extremo mantenido a una temperatura fija. ¿Qué temperatura tiene cada punto cuando el perfil ya se estabilizó?</p>
+<noscript>Activá JavaScript para cambiar los valores. Ejemplo inicial: T(x) = 60 − 40x, con x en metros y T en °C. A 0 m hay 60 °C; a 0,5 m hay 40 °C; a 1 m hay 20 °C.</noscript>
+<div class="layout">
+<section class="card graph-card" aria-labelledby="graph-title"><h2 id="graph-title">X: posición · Y: temperatura</h2>
+<svg id="plot" class="plot" viewBox="0 0 660 390" role="img" aria-labelledby="svg-title svg-desc"><title id="svg-title">Temperatura a lo largo de una barra</title><desc id="svg-desc">La recta une 60 grados en el extremo izquierdo y 20 grados en el extremo derecho. El punto medio está a 40 grados.</desc><g id="grid"></g><path class="axis" d="M65 28 V325 H635"/><text x="65" y="18">Temperatura T (°C)</text><text x="350" y="380" text-anchor="middle">Posición x a lo largo de la barra (m)</text><path id="line" class="curve"/><circle id="leftPoint" class="point" r="6"/><circle id="rightPoint" class="point" r="6"/><circle id="middlePoint" class="mid" r="7"/></svg>
+<p class="caption">La recta es una gráfica: su altura indica temperatura. <strong>No es la forma de la barra ni una trayectoria.</strong> El punto verde marca la mitad de la barra.</p>
+<div id="strip" class="strip" role="img" aria-label="Barra coloreada según su temperatura"></div><div class="strip-labels"><span>Extremo izquierdo · 0 m</span><span>Extremo derecho · 1 m</span></div>
+<p class="small">El color usa siempre la misma escala: verde azulado = 0 °C, naranja = 80 °C. El color ayuda a leer; no representa luz emitida.</p>
+</section>
+<section class="card" aria-labelledby="controls-title"><h2 id="controls-title">Probá dos temperaturas</h2>
+<label class="label" for="left">Extremo izquierdo <output id="leftValue" for="left">60 °C</output></label><input id="left" type="range" min="0" max="80" step="5" value="60">
+<label class="label" for="right">Extremo derecho <output id="rightValue" for="right">20 °C</output></label><input id="right" type="range" min="0" max="80" step="5" value="20">
+<h2>Una ecuación conocida</h2><p>Es la recta <strong>y = b + mx</strong>. Aquí llamamos T a la temperatura:</p><div class="equation" id="equation" aria-live="polite">T(x) = 60 − 40x</div><p class="small">Con x en metros y T en °C. El número que multiplica a x tiene unidades °C/m.</p>
+<p class="reading numeric" id="reading" aria-live="polite"></p><div class="presets"><button id="equal" type="button">Igualar a 40 °C</button><button id="swap" type="button">Invertir extremos</button><button id="reset" type="button">Reiniciar</button></div>
+</section>
+</div>
+<div class="below">
+<section class="card"><h2>Leé la recta como una tabla</h2><table><caption class="small">Cada fila es un lugar de la misma barra.</caption><thead><tr><th scope="col">Posición x (m)</th><th scope="col">Temperatura T (°C)</th></tr></thead><tbody id="samples"></tbody></table><p id="example" class="small numeric"></p></section>
+<section class="card"><h2>Tres preguntas para explorar</h2><ol><li>Con 60 °C a la izquierda y 20 °C a la derecha, ¿cuánto marca el punto del medio?</li><li>Igualá los extremos. ¿Cómo queda la recta? ¿Hay una dirección preferida para conducir calor?</li><li>Invertí los extremos. ¿Qué cambia en la inclinación y en el sentido del flujo de calor?</li></ol><details><summary>¿Por qué aparece una recta?</summary><p>Suponemos una barra homogénea, de sección constante, sin fuentes internas ni pérdidas por los costados. Ambos extremos se mantienen a temperaturas fijas mediante reservorios externos. Una vez estabilizado el perfil, la temperatura varía linealmente con la posición:</p><p><strong>T(x) = T<sub>izq</sub> + (T<sub>der</sub> − T<sub>izq</sub>) · x/L</strong>, con L = 1 m.</p><p>Si los extremos tienen distinta temperatura, sigue pasando calor del más caliente al más frío aunque la gráfica no cambie. Es un estado estacionario sostenido por el exterior, no un equilibrio aislado. Este visor calcula la solución directamente: no simula el proceso de estabilización.</p></details></section>
+</div>
+<footer>El siguiente paso será estudiar <strong>cómo cambia la temperatura con el tiempo</strong> y después extender el campo a una superficie. Aquí no hay seres, nacimiento ni reacción-difusión: sólo posición, temperatura y una recta. Funciona sin conexión y sin WebGL.</footer>
+</main>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id),ns='http://www.w3.org/2000/svg';
+const number=n=>new Intl.NumberFormat('es-AR',{maximumFractionDigits:2}).format(n);
+const X=x=>65+570*x,Y=t=>325-297*t/80;
+function element(tag,attrs,text){const el=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))el.setAttribute(k,v);if(text!==undefined)el.textContent=text;return el;}
+for(let t=0;t<=80;t+=20){$('grid').append(element('line',{x1:65,y1:Y(t),x2:635,y2:Y(t),class:'grid'}),element('text',{x:55,y:Y(t)+5,'text-anchor':'end'},number(t)));}
+for(let i=0;i<=4;i++){const x=i/4;$('grid').append(element('line',{x1:X(x),y1:28,x2:X(x),y2:325,class:'grid'}),element('text',{x:X(x),y:350,'text-anchor':'middle'},number(x)));}
+function temperature(x,left,right){return left+(right-left)*x;}
+function color(t){const f=t/80,a=[0,150,136],b=[255,87,34];return 'rgb('+a.map((v,i)=>Math.round(v+(b[i]-v)*f)).join(',')+')';}
+function render(){
+ const left=Number($('left').value),right=Number($('right').value),slope=right-left,mid=temperature(.5,left,right);
+ $('leftValue').value=number(left)+' °C';$('rightValue').value=number(right)+' °C';
+ $('line').setAttribute('d',`M${X(0)} ${Y(left)} L${X(1)} ${Y(right)}`);
+ for(const [id,x,t] of [['leftPoint',0,left],['rightPoint',1,right],['middlePoint',.5,mid]]){$(id).setAttribute('cx',X(x));$(id).setAttribute('cy',Y(t));}
+ $('equation').textContent=slope===0?`T(x) = ${number(left)}`:`T(x) = ${number(left)} ${slope<0?'−':'+'} ${number(Math.abs(slope))}x`;
+ $('reading').textContent=`A mitad de camino: ${number(mid)} °C. `+(slope===0?'Sin diferencia de temperatura, no hay flujo neto de calor por conducción.':`El calor se conduce de ${left>right?'izquierda a derecha':'derecha a izquierda'}, del extremo más caliente al más frío.`);
+ $('svg-desc').textContent=`Recta de ${number(left)} °C en x = 0 m a ${number(right)} °C en x = 1 m. En x = 0,5 m hay ${number(mid)} °C.`;
+ $('strip').style.background=`linear-gradient(to right,${color(left)},${color(right)})`;
+ $('strip').setAttribute('aria-label',`Barra: ${number(left)} °C a la izquierda y ${number(right)} °C a la derecha.`);
+ $('samples').replaceChildren();for(let i=0;i<=4;i++){const tr=document.createElement('tr');for(const v of [number(i/4),number(temperature(i/4,left,right))]){const td=document.createElement('td');td.textContent=v;tr.append(td);}$('samples').append(tr);}
+ $('example').textContent=`En el medio: T(0,5) = ${number(left)} + (${number(right)} − ${number(left)}) × 0,5 = ${number(mid)} °C.`;
+}
+$('left').addEventListener('input',render);$('right').addEventListener('input',render);
+$('equal').onclick=()=>{$('left').value=$('right').value=40;render();};
+$('swap').onclick=()=>{const old=$('left').value;$('left').value=$('right').value;$('right').value=old;render();};
+$('reset').onclick=()=>{$('left').value=60;$('right').value=20;render();};
+let theme='light';try{const saved=localStorage.getItem('lemeit-theme');if(saved==='dark'||saved==='light')theme=saved;}catch{}
+document.documentElement.dataset.theme=theme;
+$('theme').onclick=()=>{const next=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=next;try{localStorage.setItem('lemeit-theme',next);}catch{}};
+render();
+})();
+</script>
+</body>
+</html>

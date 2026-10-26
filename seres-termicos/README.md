@@ -7,6 +7,12 @@
 
 Laboratorio de simulación inspirado en los seres de temperaturas cambiantes de Borges y Guerrero. El proyecto explora difusión térmica, patrones de reacción-difusión y organismos activos con órganos, reservas finitas y respuesta a perturbaciones.
 
+## Empezar desde cero: versión 00
+
+[00 — Una recta de temperaturas](v00-temperatura.html) es el punto de entrada para secundaria: una barra de un metro, dos temperaturas de extremo y una gráfica de posición X frente a temperatura Y. Usa la recta `T(x) = T_izq + (T_der − T_izq) · x/L` con `L = 1 m`, una tabla de valores y tres preguntas. Sin animación, WebGL ni dependencias; funciona sin conexión.
+
+Es la solución estacionaria para una barra homogénea sin fuentes internas ni pérdidas laterales, con extremos mantenidos por reservorios. No muestra cómo llega a ese estado. El orden didáctico empieza aquí; la numeración histórica de las demás versiones se conserva.
+
 ## Empezar por la versión actual
 
 **[V4.6 — Amenazas y respuesta adaptativa](seres_termicos_V4_6.html)** es la versión más completa. Incluye seres móviles en tres dimensiones, nacimiento y extinción, intercambio de calor, reserva finita, viñetas con ecuaciones y una vista simultánea de puntos sin halos.
