@@ -1,9 +1,11 @@
-# Seres Térmicos — Documentación del proyecto
+# Bestiario · Seres Térmicos — Documentación del proyecto
 
-[![sitio: profe.lemeit.ar](https://img.shields.io/badge/sitio-profe.lemeit.ar-009688?style=flat-square&labelColor=555555)](https://profe.lemeit.ar/projects/seres-termicos/)
+[![sitio: profe.lemeit.ar](https://img.shields.io/badge/sitio-profe.lemeit.ar-009688?style=flat-square&labelColor=555555)](https://profe.lemeit.ar/projects/simus/bestiario/)
 [![docs: guía física](https://img.shields.io/badge/docs-gu%C3%ADa%20f%C3%ADsica-009688?style=flat-square&labelColor=555555)](https://github.com/lemeit/simus/blob/main/seres-termicos/guia-fisica-cronologica-seres-termicos.md)
 [![relato: Acto XIV](https://img.shields.io/badge/relato-Acto%20XIV-FF5722?style=flat-square&labelColor=555555)](https://github.com/lemeit/simus/blob/main/seres-termicos/seres_termicos_V4_6.html)
 [![diseño: lemeit](https://img.shields.io/badge/dise%C3%B1o-lemeit-009688?style=flat-square&labelColor=555555)](https://design.lemeit.ar)
+
+Este repositorio documenta Bestiario · Seres Térmicos, publicado en Profe Lamaita. Es distinto de [ΣIM · Simulación de procesos](https://sim.lemeit.ar/), cuyo código está en [lemeit/lemeit-sim](https://github.com/lemeit/lemeit-sim).
 
 A partir de «Los seres térmicos», de Jorge Luis Borges y Margarita Guerrero, este proyecto explora el encuentro entre literatura, física y simulación. La imagen de seres hechos de temperaturas cambiantes abre una pregunta: ¿cómo representar esas formas y qué leyes o hipótesis podrían sostenerlas?
 
@@ -567,4 +569,4 @@ Un ser que vive 200 frames es un gusano de 200 unidades de largo. Un ser que nun
 
 ---
 
-*Proyecto en desarrollo. Luciano Lamaita — [lemeit.ar](https://profe.lemeit.ar) · Documentación extendida con simulaciones embebidas: [profe.lemeit.ar/projects/seres-termicos](https://profe.lemeit.ar/projects/seres-termicos/)*
+*Proyecto en desarrollo. Luciano Lamaita — [lemeit.ar](https://profe.lemeit.ar) · Documentación extendida con simulaciones embebidas: [profe.lemeit.ar/projects/seres-termicos](https://profe.lemeit.ar/projects/simus/bestiario/)*
